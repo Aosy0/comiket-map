@@ -1,0 +1,1168 @@
+/* ===========================================
+   C107 サークルマップ - シンプル・軽量デザイン
+   バッテリー節約・通信量削減を優先
+   v1.1.1 - Material Icons (SVG) 対応
+   =========================================== */
+
+/* SVG Icon Base Styles */
+.icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-sm {
+  width: 18px;
+  height: 18px;
+}
+
+.icon-lg {
+  width: 28px;
+  height: 28px;
+}
+
+/* CSS Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* カラーパレット - シンプルで視認性重視 */
+  --primary: #1a73e8;
+  --primary-dark: #1557b0;
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --border: #dadce0;
+  --priority-high: #d93025;
+  --priority-medium: #f9ab00;
+  --priority-low: #1e8e3e;
+  --success: #1e8e3e;
+  --danger: #d93025;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* stickyヘッダー分のスクロールオフセット（端末差を吸収するため少し余裕を持たせる） */
+  --header-offset: 80px;
+}
+
+/* アンカー移動/自動スクロール時にヘッダー裏へ潜り込むのを防ぐ */
+html {
+  scroll-padding-top: var(--header-offset);
+}
+
+/* フォーカス移動や :target で要素がヘッダーに隠れないようにする */
+:target,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus {
+  scroll-margin-top: var(--header-offset);
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(60px + var(--safe-bottom));
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app {
+  max-width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ヘッダー - コンパクト */
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.header-status {
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 2px;
+  opacity: 0.9;
+}
+
+.header-status.offline {
+  color: #fdd835;
+}
+
+/* タブナビゲーション - 下部固定 */
+.tab-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 100;
+  padding-bottom: var(--safe-bottom);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  min-height: 56px;
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  background: #e8f0fe;
+}
+
+.tab-btn .icon {
+  width: 22px;
+  height: 22px;
+}
+
+.tab-label {
+  font-size: 0.625rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* メインコンテンツ */
+main {
+  padding: 0;
+}
+
+.tab-content {
+  display: none;
+  padding: 12px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* マップタブ専用レイアウト - ボタン固定 & スクロール無効 */
+#tab-map {
+  display: none;
+  padding: 0;
+  height: calc(100vh - 100px);
+  height: calc(100dvh - 100px);
+  overflow: hidden;
+}
+
+#tab-map.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* フィルターバー */
+.filter-bar {
+  margin-bottom: 12px;
+}
+
+.day-filter {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filter-btn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.search-box {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  background: var(--card);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* コンパクトモード切り替えボタン */
+.compact-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.compact-toggle-btn:hover {
+  background: var(--bg);
+}
+
+.compact-toggle-btn:active {
+  background: var(--border);
+  transform: scale(0.98);
+}
+
+.compact-toggle-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.compact-toggle-btn.active:hover {
+  background: var(--primary-dark);
+}
+
+.compact-toggle-text {
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+
+.compact-toggle-btn svg {
+  pointer-events: none;
+}
+
+/* サークルリスト */
+.circle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty-message {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 32px 16px;
+}
+
+/* サークルカード - シンプル */
+.circle-card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 4px solid var(--priority-medium);
+  cursor: pointer;
+}
+
+.circle-card:active {
+  background: #f1f3f4;
+}
+
+.circle-card.priority-high {
+  border-left-color: var(--priority-high);
+}
+
+.circle-card.priority-medium {
+  border-left-color: var(--priority-medium);
+}
+
+.circle-card.priority-low {
+  border-left-color: var(--priority-low);
+}
+
+.circle-card.checked {
+  opacity: 0.5;
+}
+
+.circle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.circle-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  flex: 1;
+  word-break: break-word;
+}
+
+.circle-space {
+  background: #e8f0fe;
+  color: var(--primary-dark);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.circle-info {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.circle-memo {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  background: var(--bg);
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.circle-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* コンパクトモード */
+.circle-list.compact .circle-card {
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.circle-list.compact .circle-header {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.circle-list.compact .circle-name {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.circle-list.compact .circle-space {
+  font-size: 0.6875rem;
+  padding: 1px 6px;
+}
+
+.circle-list.compact .circle-info,
+.circle-list.compact .circle-memo,
+.circle-list.compact .drag-handle {
+  display: none;
+}
+
+.circle-list.compact .circle-actions {
+  margin-top: 0;
+}
+
+.circle-list.compact .check-btn {
+  padding: 4px 8px;
+  min-height: 28px;
+  font-size: 0.75rem;
+}
+
+.check-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--success);
+  color: #fff;
+  min-height: 36px;
+}
+
+.check-btn.checked {
+  background: var(--text-secondary);
+}
+
+/* マップ */
+.map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.map-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: var(--card);
+}
+
+.map-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-btn.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.map-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+  touch-action: none;
+}
+
+.map-image {
+  position: absolute;
+  transform-origin: center center;
+  will-change: transform;
+  max-width: none;
+  max-height: none;
+}
+
+.map-image img,
+.map-image svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* マップ設定パネル */
+.map-settings {
+  padding: 12px;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+}
+
+.map-settings h3 {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.file-input-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.file-input-wrapper input[type="file"] {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+/* 設定画面 */
+.settings-section {
+  margin-bottom: 24px;
+}
+
+.settings-section h2 {
+  font-size: 0.9375rem;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.settings-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.settings-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.app-info {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.update-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* トグルスイッチ */
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.toggle-label {
+  font-size: 0.9375rem;
+  color: var(--text);
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border);
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* モーダル */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.125rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modal-body {
+  padding: 16px;
+}
+
+.modal-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+.modal-footer button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.modal-footer .btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.modal-footer .btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.modal-footer .btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* フォーム */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-color: var(--primary);
+  background: var(--card);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ドラッグハンドル */
+.drag-handle {
+  width: 36px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.drag-handle:active {
+  background: var(--bg);
+  cursor: grabbing;
+}
+
+.circle-card.dragging {
+  opacity: 0.95;
+}
+
+.circle-placeholder {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+/* レスポンシブ */
+@media (min-width: 768px) {
+  #app {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+  
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  .tab-content {
+    padding: 16px 0;
+  }
+  
+  /* リスト画面のレイアウト改善 */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .day-filter {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+  
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 0;
+  }
+  
+  .compact-toggle-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 120px;
+  }
+  
+  /* カードリストの改善 */
+  .circle-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 12px;
+  }
+  
+  .circle-list.compact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1200px) {
+  main {
+    max-width: 1000px;
+  }
+  
+  .circle-list {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+}
+
+/* 優先度選択 */
+.priority-select {
+  display: flex;
+  gap: 8px;
+}
+
+.priority-option {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.priority-option.selected {
+  border-color: var(--primary);
+  background: #e8f0fe;
+}
+
+.priority-option.high {
+  color: var(--priority-high);
+}
+
+.priority-option.medium {
+  color: var(--priority-medium);
+}
+
+.priority-option.low {
+  color: var(--priority-low);
+}
+
+/* 同期・QRコード */
+.sync-section {
+  margin-bottom: 24px;
+}
+
+.sync-section h3 {
+  font-size: 0.9375rem;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.qr-display {
+  text-align: center;
+  padding: 16px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.qr-display img {
+  max-width: 200px;
+  height: auto;
+}
+
+.code-display {
+  background: var(--bg);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.75rem;
+  word-break: break-all;
+  margin-bottom: 12px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* アニメーション - 最小限 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tab-content.active {
+  animation: fadeIn 0.15s ease;
+}
+
+/* スクロールバー - シンプル */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* マップエリア選択 */
+.area-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.area-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  flex: 1;
+  min-width: 80px;
+}
+
+.area-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* マップ管理セクション */
+.map-management-section {
+  margin-bottom: 16px;
+}
+
+.map-management-section h3 {
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.map-status-list {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.map-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.map-status-item:last-child {
+  border-bottom: none;
+}
+
+.map-status-label {
+  font-size: 0.875rem;
+}
+
+.map-status-value {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.delete-map-btn {
+  padding: 4px 8px;
+  border: 1px solid var(--danger);
+  background: none;
+  color: var(--danger);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* ページセレクター */
+.page-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-selector label {
+  font-size: 0.875rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.page-select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: var(--card);
+  min-width: 80px;
+}
+
+/* PDFアップロードエリア */
+.pdf-upload-area {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.pdf-upload-area:hover {
+  border-color: var(--primary);
+}
+
+.pdf-upload-area.dragover {
+  border-color: var(--primary);
+  background: #e8f0fe;
+}
+
+.pdf-upload-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.pdf-upload-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.pdf-file-input {
+  display: none;
+}
+
+/* PDFプレビュー */
+.pdf-preview-container {
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.pdf-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pdf-preview-item:last-child {
+  border-bottom: none;
+}
+
+.pdf-preview-thumb {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.pdf-preview-info {
+  flex: 1;
+}
+
+.pdf-preview-page {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pdf-preview-size {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.pdf-preview-remove {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+/* PDF操作ボタン */
+.pdf-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pdf-actions button {
+  flex: 1;
+}
+
+/* PDFセクション区切り */
+.pdf-section-divider {
+  position: relative;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.pdf-section-divider::before,
+.pdf-section-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 25%;
+  height: 1px;
+  background: var(--border);
+}
+
+.pdf-section-divider::before {
+  left: 0;
+}
+
+.pdf-section-divider::after {
+  right: 0;
+}

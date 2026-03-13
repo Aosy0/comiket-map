@@ -1,0 +1,35 @@
+# Environment variables
+.env
+
+maps/
+
+*.md
+!README.md
+
+# Docker volumes
+volumes/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+.cache/
+
+.git_old/
