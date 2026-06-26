@@ -1,10 +1,21 @@
+# Node.js
+node_modules/
+package-lock.json
+package.json
+
 # Environment variables
 .env
 
 maps/
 
+
 *.md
 !README.md
+
+# playwright
+.playwright
+.claude
+tools/
 
 # Docker volumes
 volumes/
@@ -31,5 +42,3 @@ npm-debug.log*
 # Temporary files
 *.tmp
 .cache/
-
-.git_old/

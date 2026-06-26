@@ -73,7 +73,8 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.5;
@@ -189,7 +190,14 @@ main {
 
 /* フィルターバー */
 .filter-bar {
-  margin-bottom: 12px;
+  position: sticky;
+  top: 60px;
+  z-index: 90;
+  background: var(--bg);
+  padding: 12px;
+  margin: -12px -12px 12px -12px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* 描画負荷の低いシンプルな影 */
 }
 
 .day-filter {
@@ -601,7 +609,7 @@ main {
   right: 0;
   bottom: 0;
   background-color: var(--border);
-  transition: .3s;
+  transition: 0.3s;
   border-radius: 24px;
 }
 
@@ -613,7 +621,7 @@ main {
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .3s;
+  transition: 0.3s;
   border-radius: 50%;
 }
 
@@ -798,17 +806,17 @@ input:checked + .toggle-slider:before {
     max-width: 100%;
     margin: 0 auto;
   }
-  
+
   main {
     max-width: 800px;
     margin: 0 auto;
     padding: 0 24px;
   }
-  
+
   .tab-content {
     padding: 16px 0;
   }
-  
+
   /* リスト画面のレイアウト改善 */
   .filter-bar {
     display: flex;
@@ -816,31 +824,31 @@ input:checked + .toggle-slider:before {
     gap: 12px;
     align-items: flex-start;
   }
-  
+
   .day-filter {
     flex: 0 0 auto;
     margin-bottom: 0;
   }
-  
+
   .search-box {
     flex: 1;
     min-width: 200px;
     margin-bottom: 0;
   }
-  
+
   .compact-toggle-btn {
     flex: 0 0 auto;
     width: auto;
     min-width: 120px;
   }
-  
+
   /* カードリストの改善 */
   .circle-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 12px;
   }
-  
+
   .circle-list.compact {
     grid-template-columns: 1fr;
   }
@@ -850,7 +858,7 @@ input:checked + .toggle-slider:before {
   main {
     max-width: 1000px;
   }
-  
+
   .circle-list {
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   }
@@ -927,8 +935,12 @@ input:checked + .toggle-slider:before {
 
 /* アニメーション - 最小限 */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .tab-content.active {
@@ -1151,7 +1163,7 @@ input:checked + .toggle-slider:before {
 
 .pdf-section-divider::before,
 .pdf-section-divider::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   width: 25%;
