@@ -850,7 +850,7 @@ input:checked + .toggle-slider:before {
   }
 
   .circle-list.compact {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
