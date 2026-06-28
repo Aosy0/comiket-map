@@ -160,6 +160,24 @@ header h1 {
   font-weight: 500;
 }
 
+/* AIボタン */
+.ai-button {
+  position: fixed;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: var(--primary);
+  color: var(--card);
+  right: 1.95vw;
+  bottom: max(70px, 4.86vw);
+  width: max(80px, 9.77vw);
+  height: max(80px, 9.77vw);
+  border-radius: max(40px, 4.88vw);
+  box-shadow: 0, 4px, 2px, 0, rgba(0, 0, 0, 0.2);
+}
+
 /* メインコンテンツ */
 main {
   padding: 0;
