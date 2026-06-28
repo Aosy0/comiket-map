@@ -66,7 +66,7 @@ const App = {
 	 */
 	updateCompactToggleButton(btn) {
 		console.log('ボタン更新:', this.compactMode);
-		btn.classList.toggle('active', this.compactMode);
+		// btn.classList.toggle('active', this.compactMode);
 		const icon = btn.querySelector('use');
 		const text = btn.querySelector('.compact-toggle-text');
 		if (icon) {
@@ -182,11 +182,10 @@ const App = {
 			console.log('コンパクトモードボタンが見つかりました');
 			// 初期状態を設定
 			this.updateCompactToggleButton(compactToggleBtn);
-			compactToggleBtn.addEventListener('click', (e) => {
+			compactToggleBtn.addEventListener('change', (e) => {
 				console.log('コンパクトモードボタンがクリックされました');
-				e.preventDefault();
-				e.stopPropagation();
-				this.compactMode = !this.compactMode; // テスト用
+				// e.stopPropagation();
+				this.compactMode = e.target.checked; // テスト用
 				console.log(this.compactMode);
 				this.toggleCompactMode(this.compactMode);
 				this.updateCompactToggleButton(compactToggleBtn);
