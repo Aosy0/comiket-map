@@ -36,6 +36,19 @@ cd /home/aosy/Docker/comiketmap
 docker compose up -d
 ```
 
+### コードチェック（Biome）
+
+```bash
+# 依存関係のインストール
+npm ci
+
+# コードスタイルをチェック
+npm run check
+
+# 自動修正を適用
+npm run check:fix
+```
+
 ### アクセス
 
 - URL: https://cmap.aosy.f5.si
