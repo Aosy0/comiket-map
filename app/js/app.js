@@ -186,7 +186,9 @@ const App = {
 				console.log('コンパクトモードボタンがクリックされました');
 				e.preventDefault();
 				e.stopPropagation();
-				this.toggleCompactMode(!this.compactMode);
+				// テスト用
+				this.compactMode = !this.compactMode;
+				this.toggleCompactMode(this.compactMode);
 				this.updateCompactToggleButton(compactToggleBtn);
 			});
 		} else {
