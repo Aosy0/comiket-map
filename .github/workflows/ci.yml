@@ -28,23 +28,31 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: self-hosted
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Deploy with Docker Compose
+      - name: Update code from Git
         run: |
-          echo "Starting deployment..."
-          docker compose up -d --force-recreate
-          echo "Deployment completed successfully"
+          cd /home/aosy/Docker/comiketmap
+          git config --global --add safe.directory /home/aosy/Docker/comiketmap
+          git fetch origin main
+          git reset --hard origin/main
 
-      - name: Verify deployment
+      - name: Check compose file
         run: |
-          sleep 3
-          if ! docker compose ps | grep -q "Up"; then
-            echo "Error: Container is not running"
-            docker compose logs --tail=20
+          cd /home/aosy/Docker/comiketmap
+          if [ ! -f compose.yaml ]; then
+            echo "⚠️ compose.yaml not found!"
             exit 1
+          else
+            echo "✅ compose.yaml exists"
           fi
-          echo "Container is running successfully"
+
+      - name: Rebuild containers
+        run: |
+          cd /home/aosy/Docker/comiketmap
+          docker compose down
+          docker compose up -d
+
+      - name: Show status
+        run: |
+          echo "✅ Deployment completed at $(date)"
+          cd /home/aosy/Docker/comiketmap
+          docker compose ps
