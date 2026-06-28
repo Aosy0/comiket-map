@@ -66,7 +66,7 @@ const App = {
 	 */
 	updateCompactToggleButton(btn) {
 		console.log('ボタン更新:', this.compactMode);
-		btn.classList.toggle('active', this.compactMode);
+		btn.checked = this.compactMode;   // ← classList.toggleの代わりにこれを追加
 		const icon = btn.querySelector('use');
 		const text = btn.querySelector('.compact-toggle-text');
 		if (icon) {
