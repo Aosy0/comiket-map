@@ -174,7 +174,7 @@ header h1 {
   width: max(80px, 9.77vw);
   height: max(80px, 9.77vw);
   border-radius: max(40px, 4.88vw);
-  box-shadow: 0, 4px, 2px, 0, rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
 /* メインコンテンツ */
@@ -867,7 +867,7 @@ input:checked + .toggle-slider:before {
 	}
 
   .circle-list.compact {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
