@@ -1,0 +1,50 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Biome
+        continue-on-error: true
+        run: npx biome check .
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy with Docker Compose
+        run: |
+          echo "Starting deployment..."
+          docker compose up -d
+          echo "Deployment completed successfully"
+
+      - name: Verify deployment
+        run: |
+          sleep 3
+          if ! docker compose ps | grep -q "Up"; then
+            echo "Error: Container is not running"
+            docker compose logs --tail=20
+            exit 1
+          fi
+          echo "Container is running successfully"
