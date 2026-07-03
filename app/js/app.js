@@ -55,31 +55,31 @@ const App = {
 		this.renderCircleList();
 
 		// ボタンの見た目を更新
-		const compactToggleBtn = document.getElementById('compactToggleBtn');
-		if (compactToggleBtn) {
-			this.updateCompactToggleButton(compactToggleBtn);
-		}
+		// const compactToggleBtn = document.getElementById('compactToggleBtn');
+		// if (compactToggleBtn) {
+		// 	this.updateCompactToggleButton(compactToggleBtn);
+		// }
 	},
 
 	/**
 	 * コンパクトモード切り替えボタンの見た目を更新
 	 */
-	updateCompactToggleButton(btn) {
-		console.log('ボタン更新:', this.compactMode);
-		btn.classList.toggle('active', this.compactMode);
-		const icon = btn.querySelector('use');
-		const text = btn.querySelector('.compact-toggle-text');
-		if (icon) {
-			const newHref = this.compactMode ? '#icon-view-list' : '#icon-view-compact';
-			icon.setAttribute('href', newHref);
-			// SVG use要素の互換性のため
-			icon.setAttribute('xlink:href', newHref);
-			console.log('アイコン変更:', newHref);
-		}
-		if (text) {
-			text.textContent = this.compactMode ? '通常表示' : 'コンパクト';
-		}
-	},
+	// updateCompactToggleButton(btn) {
+	// 	console.log('ボタン更新:', this.compactMode);
+	// 	btn.classList.toggle('active', this.compactMode);
+	// 	const icon = btn.querySelector('use');
+	// 	const text = btn.querySelector('.compact-toggle-text');
+	// 	if (icon) {
+	// 		const newHref = this.compactMode ? '#icon-view-list' : '#icon-view-compact';
+	// 		icon.setAttribute('href', newHref);
+	// 		// SVG use要素の互換性のため
+	// 		icon.setAttribute('xlink:href', newHref);
+	// 		console.log('アイコン変更:', newHref);
+	// 	}
+	// 	if (text) {
+	// 		text.textContent = this.compactMode ? '通常表示' : 'コンパクト';
+	// 	}
+	// },
 
 	/**
 	 * Service Worker登録
@@ -188,7 +188,7 @@ const App = {
 				this.compactMode = e.target.checked; // テスト用
 				console.log(this.compactMode);
 				this.toggleCompactMode(this.compactMode);
-				this.updateCompactToggleButton(compactToggleBtn);
+				// this.updateCompactToggleButton(compactToggleBtn);
 			});
 		} else {
 			console.warn('コンパクトモードボタンが見つかりません');
