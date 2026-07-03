@@ -182,6 +182,7 @@ const App = {
 			console.log('コンパクトモードボタンが見つかりました');
 			// 初期状態を設定
 			// this.updateCompactToggleButton(compactToggleBtn);
+			compactToggleBtn.checked = this.compactMode; // 初期状態だけここで同期
 			compactToggleBtn.addEventListener('change', (e) => {
 				console.log('コンパクトモードボタンがクリックされました');
 				// e.stopPropagation();
