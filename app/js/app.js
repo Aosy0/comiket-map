@@ -189,7 +189,6 @@ const App = {
 				this.compactMode = e.target.checked; // テスト用
 				console.log(this.compactMode);
 				this.toggleCompactMode(this.compactMode);
-				// this.updateCompactToggleButton(compactToggleBtn);
 			});
 		} else {
 			console.warn('コンパクトモードボタンが見つかりません');
