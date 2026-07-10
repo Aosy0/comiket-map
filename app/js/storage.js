@@ -4,15 +4,15 @@
 
 const Storage = {
 	KEYS: {
-		CIRCLES: 'c107_circles',
-		SETTINGS: 'c107_settings',
+		CIRCLES: 'C108_circles',
+		SETTINGS: 'C108_settings',
 	},
 
 	/**
 	 * IndexedDB - マップ画像保存用
 	 */
 	MapData: {
-		DB_NAME: 'c107_maps',
+		DB_NAME: 'C108_maps',
 		DB_VERSION: 1,
 		STORE_NAME: 'images',
 
