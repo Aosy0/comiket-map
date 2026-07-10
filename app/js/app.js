@@ -1,5 +1,5 @@
 /**
- * C108 サークルマップ - メインアプリケーション
+ * C107 サークルマップ - メインアプリケーション
  */
 
 const App = {
@@ -18,7 +18,7 @@ const App = {
 	 * 初期化
 	 */
 	init() {
-		console.log('C108 サークルマップ - 初期化開始');
+		console.log('C107 サークルマップ - 初期化開始');
 
 		// 設定を読み込み
 		this.loadSettings();
@@ -35,7 +35,7 @@ const App = {
 		// URLハッシュからのデータ読み込み
 		this.loadFromURLHash();
 
-		console.log('C108 サークルマップ - 初期化完了');
+		console.log('C107 サークルマップ - 初期化完了');
 	},
 
 	/**
@@ -87,7 +87,7 @@ const App = {
 	registerServiceWorker() {
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker
-				.register('./sw.js')
+				.register('/sw.js')
 				.then((reg) => {
 					console.log('Service Worker registered:', reg.scope);
 				})
@@ -680,7 +680,7 @@ const App = {
 
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `C108_circles_${new Date().toISOString().slice(0, 10)}.json`;
+		a.download = `c107_circles_${new Date().toISOString().slice(0, 10)}.json`;
 		a.click();
 
 		URL.revokeObjectURL(url);
@@ -1065,7 +1065,7 @@ const App = {
 		try {
 			// IndexedDBのマップデータベースを完全に削除
 			await new Promise((resolve, reject) => {
-				const request = indexedDB.deleteDatabase('C108_maps');
+				const request = indexedDB.deleteDatabase('c107_maps');
 				request.onsuccess = () => resolve();
 				request.onerror = () => reject(request.error);
 				request.onblocked = () => {
