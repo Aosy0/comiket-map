@@ -191,6 +191,12 @@ main {
 	display: block;
 }
 
+.tab-content.blank-tab {
+	padding: 0;
+	background: #fff;
+	min-height: calc(100dvh - 100px - 56px);
+}
+
 /* マップタブ専用レイアウト - ボタン固定 & スクロール無効 */
 #tab-map {
 	display: none;
