@@ -144,9 +144,9 @@
       </nav>
 
       <!-- AIボタン -->
-      <button class="ai-button">
+      <!-- <button class="ai-button">
         AIに質問
-      </button>
+      </button> -->
 
       <!-- メインコンテンツ -->
       <main>
@@ -206,7 +206,7 @@
         <section id="tab-add" class="tab-content">
           <form id="addCircleForm" class="add-form">
             <div class="form-group">
-              <label for="circleName">サークル名 *</label>
+              <label for="circleName">サークル名 <span style="color: red">*</span></label>
               <input
                 type="text"
                 id="circleName"
@@ -215,7 +215,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="spaceNumber">スペース番号 *</label>
+              <label for="spaceNumber">スペース番号 <span style="color: red">*</span></label>
               <input
                 type="text"
                 id="spaceNumber"
@@ -224,7 +224,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="circleDay">日程 *</label>
+              <label for="circleDay">日程 <span style="color: red">*</span></label>
               <select id="circleDay" required>
                 <option value="1">1日目 (12/29)</option>
                 <option value="2">2日目 (12/30)</option>
@@ -435,49 +435,54 @@
     <div id="editModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>サークル編集</h2>
+          <div>サークル編集</div>
           <button class="modal-close" id="closeModal">&times;</button>
         </div>
-        <form id="editCircleForm" class="add-form">
-          <input type="hidden" id="editCircleId" />
-          <div class="form-group">
-            <label for="editCircleName">サークル名 *</label>
-            <input type="text" id="editCircleName" required />
-          </div>
-          <div class="form-group">
-            <label for="editSpaceNumber">スペース番号 *</label>
-            <input type="text" id="editSpaceNumber" required />
-          </div>
-          <div class="form-group">
-            <label for="editCircleDay">日程 *</label>
-            <select id="editCircleDay" required>
-              <option value="1">1日目 (12/29)</option>
-              <option value="2">2日目 (12/30)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="editCircleGenre">ジャンル</label>
-            <input type="text" id="editCircleGenre" />
-          </div>
-          <div class="form-group">
-            <label for="editCircleMemo">メモ</label>
-            <textarea id="editCircleMemo" rows="3"></textarea>
-          </div>
-          <div class="form-group">
-            <label for="editCirclePriority">優先度</label>
-            <select id="editCirclePriority">
-              <option value="high">🔴 高</option>
-              <option value="medium">🟡 中</option>
-              <option value="low">🟢 低</option>
-            </select>
-          </div>
-          <div class="modal-buttons">
-            <button type="submit" class="submit-btn">保存</button>
-            <button type="button" class="delete-btn" id="deleteCircle">
-              削除
-            </button>
-          </div>
-        </form>
+        <div class="modal-body">
+          <form id="editCircleForm" class="add-form">
+            <input type="hidden" id="editCircleId" />
+            <div class="form-group">
+              <label for="editCircleName">サークル名 <span style="color: red">*</span></label>
+              <input type="text" id="editCircleName" required />
+            </div>
+            <div class="form-group">
+              <label for="editSpaceNumber">スペース番号 <span style="color: red">*</span></label>
+              <input type="text" id="editSpaceNumber" required />
+            </div>
+            <div class="form-group">
+              <label for="editCircleDay">日程 <span style="color: red">*</span></label>
+              <select id="editCircleDay" required>
+                <option value="1">1日目 (12/29)</option>
+                <option value="2">2日目 (12/30)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="editCircleGenre">ジャンル</label>
+              <input type="text" id="editCircleGenre" />
+            </div>
+            <div class="form-group">
+              <label for="editCircleMemo">メモ</label>
+              <textarea id="editCircleMemo" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="editCirclePriority">優先度</label>
+              <select id="editCirclePriority">
+                <option value="high">🔴 高</option>
+                <option value="medium">🟡 中</option>
+                <option value="low">🟢 低</option>
+              </select>
+            </div>
+            <div class="modal-buttons">
+              <button type="submit" class="submit-btn">保存</button>
+              <button type="button" class="delete-btn" id="deleteCircle">
+                <svg class="icon icon-sm">
+                  <use href="#icon-delete" />
+                </svg>
+                削除
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
