@@ -280,6 +280,10 @@ const App = {
 				});
 			}
 		});
+
+		document.getElementById('open-aichat').addEventListener('click', () => {
+			document.getElementById('aichat').classList.add('show');
+		});
 	},
 
 	/**
