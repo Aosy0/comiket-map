@@ -110,6 +110,11 @@
           d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"
         />
       </symbol>
+      <symbol id="icon-send" viewBox="0 0 24 24">
+        <path
+          d="M2,21L23,12L2,3V10L17,12L2,14V21Z"
+        />
+      </symbol>
     </svg>
 
     <div id="app">
@@ -289,11 +294,20 @@
               </div>
               <div></div>
             </div>
-            <div class="aichat-body">
-              あ
+            <div id="aichat-body" class="aichat-body">
             </div>
             <div class="aichat-footer">
-              <input id="aichat-form" class="aichat-form" placeholder="今回の参加サークル数を教えて" />
+              <div class="aichat-form-container">
+                <input id="aichat-form" class="aichat-form" placeholder="今回の参加サークル数を教えて" />
+              </div>
+              <div style="width: 100%;"></div>
+              <div class="aichat-submitbutton-container">
+                <button id="aichat-submitbutton" class="aichat-submitbutton">
+                  <svg class="icon">
+                    <use href="#icon-send" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </section>

@@ -658,11 +658,18 @@ body.aichat-open {
 	bottom: 57.8px;
 	width: 100%;
 	height: 80px;
+	display: grid;
+	grid-template-columns: 7fr 0.1fr 2fr;
+	background-color: #1557b0;
+	padding: 8px 16px;
+}
+
+.aichat-form-container {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background-color: #1557b0;
-	padding: 8px 16px;
+	width: 100%;
+	height: 100%;
 }
 
 .aichat-form {
@@ -674,6 +681,66 @@ body.aichat-open {
 	height: 56px;
 	width: 100%;
 	padding: 0 8px;
+}
+
+.aichat-submitbutton-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+}
+
+.aichat-submitbutton {
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	/* font-size: 1rem; */
+	background: var(--bg);
+	color: var(--text);
+	height: 56px;
+	width: 100%;
+	padding: 0 8px;
+	color: var(--primary)
+}
+
+.aichat-speechbubble-user-container {
+	width: 100%;
+	min-height: 48px;
+	display: flex;
+	justify-content: right;
+	margin: 16px 0;
+}
+
+.aichat-speechbubble-user {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #ffffff;
+	min-width: 100px;
+	min-height: 48px;
+	border-radius: 16px 16px 0 16px;
+	background-color: var(--primary);
+	padding: 16px;
+}
+
+.aichat-speechbubble-ai-container {
+	width: 100%;
+	min-height: 48px;
+	display: flex;
+	justify-content: left;
+	margin: 16px 0;
+}
+
+.aichat-speechbubble-ai {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #ffffff;
+	min-width: 100px;
+	min-height: 50px;
+	border-radius: 16px 16px 16px 0;
+	background-color: #333333;
+	padding: 16px;
 }
 
 .aichat.show {

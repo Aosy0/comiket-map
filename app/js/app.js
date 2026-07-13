@@ -282,15 +282,78 @@ const App = {
 		});
 
 		// AIチャットを開く
-		document.getElementById('open-aichat').addEventListener('click', () => {
-			document.getElementById('aichat').classList.add('show');
-			document.body.classList.add('aichat-open');
-		});
+		const openAIChatBtn = document.getElementById('open-aichat');
+		if(openAIChatBtn) {
+			openAIChatBtn.addEventListener('click', () => {
+				document.getElementById('aichat').classList.add('show');
+				document.body.classList.add('aichat-open');
+			});
+		}
+		
+		// AIチャットを閉じる
+		const closeAIChatBtn = document.getElementById('close-aichat');
+		if(closeAIChatBtn) {
+			closeAIChatBtn.addEventListener('click', () => {
+				document.getElementById('aichat').classList.remove('show');
+				document.body.classList.remove('aichat-open');
+			});
+		}
 
-		document.getElementById('close-aichat').addEventListener('click', () => {
-			document.getElementById('aichat').classList.remove('show');
-			document.body.classList.remove('aichat-open');
-		});
+		// 吹き出しの1行あたりの文字数制限
+		// 全角換算で maxWidth 文字ごとに改行を挿入する
+		function wrapText(text, maxWidth = 20) {
+				const lines = [];
+
+				// ユーザーが自分で入力した改行はそのまま尊重する
+				for (const paragraph of text.split('\n')) {
+						let line = '';
+						let lineWidth = 0;
+
+						for (const char of paragraph) {
+								const charWidth = /[^\x00-\xff]/.test(char) ? 2 : 1; // 全角=2、半角=1
+								
+								if (lineWidth + charWidth > maxWidth) {
+										lines.push(line);
+										line = char;
+										lineWidth = charWidth;
+								} else {
+										line += char;
+										lineWidth += charWidth;
+								}
+						}
+						lines.push(line);
+				}
+
+				return lines.join('\n');
+		}
+
+		let prompt = "";
+		let promptHtml = "";
+		const aichatForm = document.getElementById('aichat-form');
+		const promptSubmitButton = document.getElementById('aichat-submitbutton');
+		if(aichatForm && promptSubmitButton) {
+			promptSubmitButton.addEventListener('click', () => {
+			prompt = aichatForm.value;
+			aichatForm.value = "";
+			const aichatBody = document.getElementById('aichat-body');
+			if (aichatBody) {
+					// 折り返し処理 + HTMLエスケープ（XSS対策）
+					const wrapped = wrapText(prompt, 20)
+							.replace(/&/g, '&amp;')
+							.replace(/</g, '&lt;')
+							.replace(/>/g, '&gt;')
+							.replace(/\n/g, '<br>');  // 改行を<br>に変換
+
+					promptHtml = `
+							<div class="aichat-speechbubble-user-container">
+									<div class="aichat-speechbubble-user">
+											${wrapped}
+									</div>
+							</div>`;
+					aichatBody.insertAdjacentHTML("beforeend", promptHtml);
+				}
+			});
+		}
 	},
 
 	/**
