@@ -284,10 +284,12 @@ const App = {
 		// AIチャットを開く
 		document.getElementById('open-aichat').addEventListener('click', () => {
 			document.getElementById('aichat').classList.add('show');
+			document.body.classList.add('aichat-open');
 		});
 
 		document.getElementById('close-aichat').addEventListener('click', () => {
 			document.getElementById('aichat').classList.remove('show');
+			document.body.classList.remove('aichat-open');
 		});
 	},
 
