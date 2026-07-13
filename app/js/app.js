@@ -807,14 +807,35 @@ const App = {
 	 */
 	showToast(message) {
 		const toast = document.getElementById('toast');
+		console.log(toast);
 		if (!toast) return;
 
-		toast.textContent = message;
-		toast.classList.remove('hidden');
+		// toast.textContent = message;
+		if(document.getElementById("toast-header")) {
+			document.getElementById("toast-header").remove();
+		}
+		if(document.getElementById("toast-body")) {
+			document.getElementById("toast-body").remove();
+		}
+		const toastHtml = `
+			<div id="toast-header" class="toast-header">
+				<img src="..." class="rounded me-2" alt="...">
+				<strong class="me-auto">Bootstrap</strong>
+				<small>11 mins ago</small>
+				<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+			</div>
+			<div id="toast-body" class="toast-body" style="display: grid, grid-template-columns: 9fr 1fr">
+				${message}
+			</div>`;
+		toast.insertAdjacentHTML("afterbegin", toastHtml);
+		// toastHtml = "";
+		// toast.classList.remove('hidden');
 
-		setTimeout(() => {
-			toast.classList.add('hidden');
-		}, 2500);
+		// setTimeout(() => {
+		// 	toast.classList.add('hidden');
+		// }, 2500);
+		const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
+		toastBootstrap.show()
 	},
 
 	/**
