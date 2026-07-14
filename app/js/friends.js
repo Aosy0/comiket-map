@@ -30,11 +30,19 @@ const Friends = {
 	},
 
 	_encode(obj) {
-		return btoa(encodeURIComponent(JSON.stringify(obj)));
+		// URL安全なbase64url形式で出力（+→-、/→_、=除去）
+		const base64 = btoa(encodeURIComponent(JSON.stringify(obj)));
+		return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 	},
 
 	_decode(str) {
-		return JSON.parse(decodeURIComponent(atob(str)));
+		// base64url → 標準base64 に戻す
+		let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+		// パディングを復元（4の倍数に揃える）
+		const r = base64.length % 4;
+		if (r === 2) base64 += '==';
+		else if (r === 3) base64 += '=';
+		return JSON.parse(decodeURIComponent(atob(base64)));
 	},
 
 	generateShareURL() {
@@ -101,7 +109,7 @@ const Friends = {
 			return;
 		}
 
-		const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(url)}`;
+		const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
 		document.getElementById('shareQRImage').src = qrSrc;
 
 		const expiry = new Date(Date.now() + this.QR_EXPIRY_MS);
