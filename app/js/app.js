@@ -329,6 +329,7 @@ const App = {
 		// GeminiAPIの呼び出し
 		const callGeminiAPI = async (prompt) => {
 			try{
+				const systemInstruction = await fetch('/system_instruction.txt').then(res => res.text());
 				const response = await fetch('/api/gemini', {
 						method: "POST",
 						headers: {
@@ -337,9 +338,7 @@ const App = {
 						body: JSON.stringify({
 							system_instruction: {
 								parts: [
-									{text: `あなたは東京国際展示場で開催されるコミックマーケットに何度も訪れているコミックマーケットの専門家です.
-									コミックマーケットC108に参加するユーザーから質問を受けることを想定し、関連する情報(公式の情報を優先)をもとにサークルの配置や会場レイアウト、企業ブースの情報、熱中症対策など、コミケに関する質問に日本語で答えてください。
-									質問の意図を超えた回答をする必要はなく、あくまで質問に対し簡潔に（多くても可能な限り100字以内に収める）回答してください。`}
+									{text: systemInstruction}
 								]
 							},
 							contents: [{
@@ -367,15 +366,11 @@ const App = {
 			}
 		}
 
-		let prompt = "";
-		let promptHTML = "";
-		let reply = "";
-		let replyHTML = "";
 		const aichatForm = document.getElementById('aichat-form');
 		const promptSubmitButton = document.getElementById('aichat-submitbutton');
 		if(aichatForm && promptSubmitButton) {
 			promptSubmitButton.addEventListener('click', async () => {
-			prompt = aichatForm.value;
+			const prompt = aichatForm.value;
 			aichatForm.value = "";
 			aichatForm.disabled = true;
 			const aichatBody = document.getElementById('aichat-body');
@@ -386,7 +381,7 @@ const App = {
 						.replace(/</g, '&lt;')
 						.replace(/>/g, '&gt;')
 						.replace(/\n/g, '<br>');
-				promptHTML = `
+				const promptHTML = `
 						<div class="aichat-speechbubble-user-container">
 								<div class="aichat-speechbubble-user">
 										${wrappedPrompt}
@@ -394,14 +389,14 @@ const App = {
 						</div>`;
 				aichatBody.insertAdjacentHTML("beforeend", promptHTML);
 
-				reply = await callGeminiAPI(prompt);
+				const reply = await callGeminiAPI(prompt);
 				if(reply) {
 					const wrappedReply = wrapText(reply, 30)
 							.replace(/&/g, '&amp;')
 							.replace(/</g, '&lt;')
 							.replace(/>/g, '&gt;')
 							.replace(/\n/g, '<br>');
-					replyHTML = `
+					const replyHTML = `
 						<div class="aichat-speechbubble-ai-container">
 								<div class="aichat-speechbubble-ai">
 										${wrappedReply}
@@ -519,7 +514,9 @@ const App = {
 		return `
             <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
                 <div class="circle-header">
-            <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
+            <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">
+							<svg class="icon" style="width: 16px; height: 16px;"><use href="#icon-move" /></svg>
+						</button>
                     <span class="circle-name">${this.escapeHtml(circle.name)}</span>
                     <span class="circle-space">${this.escapeHtml(circle.space)}</span>
                 </div>
