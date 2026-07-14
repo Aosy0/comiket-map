@@ -327,9 +327,12 @@ const App = {
 		}
 
 		// GeminiAPIの呼び出し
+		let systemInstruction = null;
 		const callGeminiAPI = async (prompt) => {
+			if (!systemInstruction) {
+        systemInstruction = await fetch('/system_instruction.txt').then(res => res.text());
+			}
 			try{
-				const systemInstruction = await fetch('/system_instruction.txt').then(res => res.text());
 				const response = await fetch('/api/gemini', {
 						method: "POST",
 						headers: {

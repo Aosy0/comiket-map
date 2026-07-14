@@ -38,7 +38,7 @@ http {
 
         # Gemini APIの中継（APIキーはサーバー側のみ保持）
         location /api/gemini {
-            proxy_pass https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY};
+            proxy_pass https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY};
             proxy_ssl_server_name on;
             proxy_http_version 1.1;
             proxy_set_header Content-Type application/json;
