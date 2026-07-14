@@ -10,7 +10,7 @@ services:
       - .env
     command: >
       sh -c "
-        envsubst '\${GEMINI_API_KEY}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf &&
+        envsubst '$${GEMINI_API_KEY}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf &&
         nginx -g 'daemon off;'
       "
     networks:
