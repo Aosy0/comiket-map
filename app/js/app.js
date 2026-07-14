@@ -934,7 +934,6 @@ const App = {
 		const toast = document.getElementById('toast');
 		if (!toast) return;
 
-		// toast.textContent = message;
 		if(document.getElementById("toast-header")) {
 			document.getElementById("toast-header").remove();
 		}
@@ -957,12 +956,6 @@ const App = {
 				${message}
 			</div>`;
 		toast.insertAdjacentHTML("afterbegin", toastHtml);
-		// toastHtml = "";
-		// toast.classList.remove('hidden');
-
-		// setTimeout(() => {
-		// 	toast.classList.add('hidden');
-		// }, 2500);
 		const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
 		toastBootstrap.show()
 	},
