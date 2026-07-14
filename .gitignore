@@ -43,3 +43,5 @@ npm-debug.log*
 
 #config
 app/js/config.js
+
+.omo/

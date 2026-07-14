@@ -1,0 +1,80 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip圧縮（通信量削減）
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;
+
+    server {
+        listen 80;
+        server_name cmap.aosy.f5.si localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # Gemini APIの中継（APIキーはサーバー側のみ保持）
+        location /api/gemini {
+            proxy_pass https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY};
+            proxy_ssl_server_name on;
+            proxy_http_version 1.1;
+            proxy_set_header Content-Type application/json;
+            proxy_set_header Host generativelanguage.googleapis.com;
+        }
+
+        # セキュリティヘッダー
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+
+        # PWA用: Service Workerのスコープ設定
+        add_header Service-Worker-Allowed "/" always;
+
+        # 静的ファイルのキャッシュ設定（PWAでオフライン時も有効）
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # manifest.jsonとService Workerは頻繁に更新される可能性
+        location ~* (manifest\.json|sw\.js)$ {
+            expires 0;
+            add_header Cache-Control "no-cache, must-revalidate";
+        }
+
+        # SPA対応: 全てのルートをindex.htmlに
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # ヘルスチェック用
+        location /health {
+            access_log off;
+            return 200 "OK";
+            add_header Content-Type text/plain;
+        }
+    }
+}
