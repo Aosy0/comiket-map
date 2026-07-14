@@ -32,6 +32,9 @@ const App = {
 		// マップ初期化
 		MapViewer.init();
 
+		// 友達管理初期化
+		Friends.init();
+
 		// URLハッシュからのデータ読み込み
 		this.loadFromURLHash();
 
@@ -976,6 +979,17 @@ const App = {
 	 * URLハッシュからデータを読み込み
 	 */
 	loadFromURLHash() {
+		const hash = window.location.hash.slice(1);
+		if (!hash) return;
+
+		// 友達共有URL
+		if (hash.startsWith('friend=')) {
+			window.history.replaceState(null, '', window.location.pathname);
+			const encoded = hash.slice('friend='.length);
+			Friends.importFromHash(encoded);
+			return;
+		}
+
 		const circles = Sync.loadFromHash();
 		if (circles && circles.length > 0) {
 			if (confirm(`URLから${circles.length}件のサークルデータが検出されました。\n読み込みますか？`)) {

@@ -589,6 +589,7 @@ main {
 	text-align: center;
 	width: 100%;
 	height: 100px;
+	margin-bottom: 16px;
 	background-color: var(--card);
 	border-radius: 8px;
 	border: solid 1px var(--primary);
@@ -768,6 +769,231 @@ body.aichat-open {
 	justify-content: center;
 }
 
+/* 友達一覧アクションボタン */
+.friends-actions {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.friends-action-btn {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 12px;
+	border: 1px solid var(--border);
+	background: var(--card);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	cursor: pointer;
+	color: var(--text);
+}
+
+.friends-action-btn:active {
+	background: var(--bg);
+}
+
+/* 友達アイテム */
+.friend-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: var(--card);
+	border-radius: 8px;
+	padding: 12px;
+	margin-bottom: 8px;
+	cursor: pointer;
+}
+
+.friend-item:active {
+	background: #f1f3f4;
+}
+
+.friend-item-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.friend-item-name {
+	font-weight: 600;
+	font-size: 0.9375rem;
+	margin-bottom: 2px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.friend-item-meta {
+	font-size: 0.8125rem;
+	color: var(--text-secondary);
+}
+
+.friend-delete-btn {
+	padding: 6px 12px;
+	border: 1px solid var(--danger);
+	background: none;
+	color: var(--danger);
+	border-radius: 6px;
+	font-size: 0.75rem;
+	cursor: pointer;
+	margin-left: 8px;
+	flex-shrink: 0;
+}
+
+/* 友達詳細 */
+.friend-detail-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.friend-back-btn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 8px;
+	border: 1px solid var(--border);
+	background: var(--card);
+	border-radius: 6px;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	color: var(--text);
+	flex-shrink: 0;
+}
+
+.friend-detail-title {
+	font-size: 1.125rem;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* QRコード共有モーダル */
+.qr-container {
+	text-align: center;
+	padding: 16px;
+}
+
+.qr-image {
+	max-width: 256px;
+	height: auto;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+}
+
+/* カメラスキャンビュー */
+.camera-view {
+	position: fixed;
+	inset: 0;
+	z-index: 500;
+	background: #000;
+}
+
+.camera-view video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.camera-canvas-hidden {
+	display: none;
+}
+
+.camera-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	pointer-events: none;
+}
+
+.camera-viewfinder-box {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: min(80vw, 300px);
+	aspect-ratio: 1;
+	border: 2px solid rgba(255, 255, 255, 0.8);
+	border-radius: 16px;
+	box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+}
+
+.camera-header {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	padding: 16px;
+	padding-top: max(16px, env(safe-area-inset-top));
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	pointer-events: auto;
+}
+
+.camera-title {
+	color: white;
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.camera-close-btn {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.2);
+	border: none;
+	color: white;
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+
+.camera-close-btn:active {
+	background: rgba(255, 255, 255, 0.3);
+}
+
+.camera-footer {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 16px;
+	padding-bottom: max(16px, env(safe-area-inset-bottom));
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	pointer-events: auto;
+}
+
+.camera-status {
+	color: white;
+	font-size: 0.875rem;
+	text-align: center;
+}
+
+.camera-gallery-btn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 24px;
+	background: rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 8px;
+	color: white;
+	font-size: 0.9375rem;
+	cursor: pointer;
+}
+
+.camera-gallery-btn:active {
+	background: rgba(255, 255, 255, 0.3);
+}
+
 /* 設定画面 */
 .settings-section {
 	margin-bottom: 24px;
@@ -882,6 +1108,10 @@ input:checked + .toggle-slider:before {
 	align-items: center;
 	justify-content: center;
 	padding: 16px;
+}
+
+.hidden {
+	display: none !important;
 }
 
 .modal.hidden {
