@@ -40,3 +40,6 @@ npm-debug.log*
 # Temporary files
 *.tmp
 .cache/
+
+#config
+app/js/config.js

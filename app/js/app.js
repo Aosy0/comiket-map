@@ -301,7 +301,7 @@ const App = {
 
 		// 吹き出しの1行あたりの文字数制限
 		// 全角換算で maxWidth 文字ごとに改行を挿入する
-		function wrapText(text, maxWidth = 20) {
+		const wrapText = (text, maxWidth = 30) => {
 				const lines = [];
 
 				// ユーザーが自分で入力した改行はそのまま尊重する
@@ -323,35 +323,93 @@ const App = {
 						}
 						lines.push(line);
 				}
-
 				return lines.join('\n');
 		}
 
+		// GeminiAPIの呼び出し
+		const callGeminiAPI = async (prompt) => {
+			try{
+				const response = await fetch(
+					`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${CONFIG.GEMINI_API_KEY}`,{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							system_instruction: {
+								parts: [
+									{text: `あなたは東京国際展示場で開催されるコミックマーケットに何度も訪れているコミックマーケットの専門家です.
+									コミックマーケットC108に参加するユーザーから質問を受けることを想定し、関連する情報(公式の情報を優先)をもとにサークルの配置や会場レイアウト、企業ブースの情報、熱中症対策など、コミケに関する質問に日本語で答えてください。
+									質問の意図を超えた回答をする必要はなく、あくまで質問に対し簡潔に（多くても可能な限り100字以内に収める）回答してください。`}
+								]
+							},
+							contents: [{
+								parts: [
+									{text: prompt}
+								]
+							}]
+						})
+					}
+				);
+				const data = await response.json();
+				console.log(data);
+
+				if (!response.ok) {
+            const status = data.error?.status;
+            if (status === 'RESOURCE_EXHAUSTED') {
+                return 'リクエストが多すぎます。少し待ってから再度お試しください。';
+            }
+            return `エラーが発生しました（${response.status}）`;
+        }
+
+				return data.candidates[0].content.parts[0].text;
+			} catch(e) {
+				console.error('Gemini APIエラー:', e);
+			}
+		}
+
 		let prompt = "";
-		let promptHtml = "";
+		let promptHTML = "";
+		let reply = "";
+		let replyHTML = "";
 		const aichatForm = document.getElementById('aichat-form');
 		const promptSubmitButton = document.getElementById('aichat-submitbutton');
 		if(aichatForm && promptSubmitButton) {
-			promptSubmitButton.addEventListener('click', () => {
+			promptSubmitButton.addEventListener('click', async () => {
 			prompt = aichatForm.value;
 			aichatForm.value = "";
 			const aichatBody = document.getElementById('aichat-body');
 			if (aichatBody) {
-					// 折り返し処理 + HTMLエスケープ（XSS対策）
-					const wrapped = wrapText(prompt, 20)
+				// 折り返し処理 + HTMLエスケープ（XSS対策）
+				const wrappedPrompt = wrapText(prompt, 30)
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						.replace(/\n/g, '<br>');
+				promptHTML = `
+						<div class="aichat-speechbubble-user-container">
+								<div class="aichat-speechbubble-user">
+										${wrappedPrompt}
+								</div>
+						</div>`;
+				aichatBody.insertAdjacentHTML("beforeend", promptHTML);
+
+				reply = await callGeminiAPI(prompt);
+				if(reply) {
+					const wrappedReply = wrapText(reply, 30)
 							.replace(/&/g, '&amp;')
 							.replace(/</g, '&lt;')
 							.replace(/>/g, '&gt;')
-							.replace(/\n/g, '<br>');  // 改行を<br>に変換
-
-					promptHtml = `
-							<div class="aichat-speechbubble-user-container">
-									<div class="aichat-speechbubble-user">
-											${wrapped}
-									</div>
-							</div>`;
-					aichatBody.insertAdjacentHTML("beforeend", promptHtml);
+							.replace(/\n/g, '<br>');
+					replyHTML = `
+						<div class="aichat-speechbubble-ai-container">
+								<div class="aichat-speechbubble-ai">
+										${wrappedReply}
+								</div>
+						</div>`;
+						aichatBody.insertAdjacentHTML("beforeend", replyHTML);
 				}
+			}
 			});
 		}
 	},
