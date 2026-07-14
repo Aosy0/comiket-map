@@ -378,6 +378,7 @@ const App = {
 			promptSubmitButton.addEventListener('click', async () => {
 			prompt = aichatForm.value;
 			aichatForm.value = "";
+			aichatForm.disabled = true;
 			const aichatBody = document.getElementById('aichat-body');
 			if (aichatBody) {
 				// 折り返し処理 + HTMLエスケープ（XSS対策）
@@ -407,8 +408,9 @@ const App = {
 										${wrappedReply}
 								</div>
 						</div>`;
-						aichatBody.insertAdjacentHTML("beforeend", replyHTML);
+					aichatBody.insertAdjacentHTML("beforeend", replyHTML);
 				}
+				aichatForm.disabled = false;
 			}
 			});
 		}

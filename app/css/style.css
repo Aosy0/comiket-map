@@ -589,6 +589,7 @@ main {
 
 #tab-communication {
 	position: relative;
+  height: calc(100dvh - 70.8px - 57.8px);
 }
 
 /* AIチャット */
@@ -681,6 +682,10 @@ body.aichat-open {
 	height: 56px;
 	width: 100%;
 	padding: 0 8px;
+}
+
+.aichat-form:disabled {
+	background-color: var(--border);
 }
 
 .aichat-submitbutton-container {
