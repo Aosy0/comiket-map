@@ -341,10 +341,12 @@ main {
 
 /* サークルカード - シンプル */
 .circle-card {
+	position: relative;
 	background: var(--card);
 	border-radius: 8px;
 	padding: 12px;
-	border-left: 4px solid var(--priority-medium);
+	/* border-top: 4px double var(--priority-medium);
+	border-bottom: 4px double var(--priority-medium); */
 	cursor: pointer;
 }
 
@@ -352,7 +354,7 @@ main {
 	background: #f1f3f4;
 }
 
-.circle-card.priority-high {
+/* .circle-card.priority-high {
 	border-left-color: var(--priority-high);
 }
 
@@ -362,6 +364,18 @@ main {
 
 .circle-card.priority-low {
 	border-left-color: var(--priority-low);
+} */
+
+.circle-card-badge.priority-high {
+	background-color: var(--priority-high);
+}
+
+.circle-card-badge.priority-medium {
+	background-color: var(--priority-medium);
+}
+
+.circle-card-badge.priority-low {
+	background-color: var(--priority-low);
 }
 
 .circle-card.checked {

@@ -363,6 +363,7 @@ const App = {
 				return data.candidates[0].content.parts[0].text;
 			} catch(e) {
 				console.error('Gemini APIエラー:', e);
+				return `エラーが発生しました`
 			}
 		}
 
@@ -513,12 +514,15 @@ const App = {
 
 		return `
             <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
+								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
+									<span class="visually-hidden">New alerts</span>
+								</span>
                 <div class="circle-header">
-            <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">
-							<svg class="icon" style="width: 16px; height: 16px;"><use href="#icon-move" /></svg>
-						</button>
-                    <span class="circle-name">${this.escapeHtml(circle.name)}</span>
-                    <span class="circle-space">${this.escapeHtml(circle.space)}</span>
+									<button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">
+										<svg class="icon" style="width: 16px; height: 16px;"><use href="#icon-move" /></svg>
+									</button>
+									<span class="circle-name">${this.escapeHtml(circle.name)}</span>
+									<span class="circle-space">${this.escapeHtml(circle.space)}</span>
                 </div>
                 <div class="circle-info">
                     <span><svg class="icon icon-sm"><use href="#icon-event"/></svg> ${dayLabel}</span>
