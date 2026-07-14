@@ -737,7 +737,7 @@ const App = {
 
 		Storage.addCircle(circle);
 		e.target.reset();
-		this.showToast('サークルを追加しました');
+		this.showToast('サークルを追加しました', 0);
 		this.switchTab('list');
 		this.renderCircleList();
 	},
@@ -786,7 +786,7 @@ const App = {
 
 		Storage.updateCircle(id, updates);
 		this.closeEditModal();
-		this.showToast('サークルを更新しました');
+		this.showToast('サークルを更新しました', 0);
 		this.renderCircleList();
 	},
 
@@ -799,7 +799,7 @@ const App = {
 		const id = document.getElementById('editCircleId').value;
 		Storage.deleteCircle(id);
 		this.closeEditModal();
-		this.showToast('サークルを削除しました');
+		this.showToast('サークルを削除しました', 0);
 		this.renderCircleList();
 	},
 
@@ -817,7 +817,7 @@ const App = {
 		a.click();
 
 		URL.revokeObjectURL(url);
-		this.showToast('エクスポートしました');
+		this.showToast('エクスポートしました', 0);
 	},
 
 	/**
@@ -831,10 +831,10 @@ const App = {
 		reader.onload = (event) => {
 			const result = Storage.importData(event.target.result);
 			if (result.success) {
-				this.showToast(`${result.imported}件のサークルをインポートしました`);
+				this.showToast(`${result.imported}件のサークルをインポートしました`, 0);
 				this.renderCircleList();
 			} else {
-				this.showToast(`インポートに失敗しました: ${result.error}`);
+				this.showToast(`インポートに失敗しました: ${result.error}`, 2);
 			}
 		};
 		reader.readAsText(file);
@@ -849,7 +849,7 @@ const App = {
 		if (!confirm('本当に削除しますか？')) return;
 
 		Storage.clearAll();
-		this.showToast('全データを削除しました');
+		this.showToast('全データを削除しました', 0);
 		this.renderCircleList();
 	},
 
@@ -900,7 +900,7 @@ const App = {
 			return;
 		}
 
-		this.showToast('更新中...');
+		this.showToast('更新中...', 1);
 
 		try {
 			// Service Workerの登録を解除
@@ -923,16 +923,15 @@ const App = {
 			}, 500);
 		} catch (e) {
 			console.error('Force update failed:', e);
-			this.showToast('更新に失敗しました');
+			this.showToast('更新に失敗しました', 2);
 		}
 	},
 
 	/**
 	 * トースト表示
 	 */
-	showToast(message) {
+	showToast(message, index) {
 		const toast = document.getElementById('toast');
-		console.log(toast);
 		if (!toast) return;
 
 		// toast.textContent = message;
@@ -942,11 +941,16 @@ const App = {
 		if(document.getElementById("toast-body")) {
 			document.getElementById("toast-body").remove();
 		}
+		const status = getToastStatus(index);
+		const icon = getToastIcon(index);
+		const color = getToastColor(index);
 		const toastHtml = `
 			<div id="toast-header" class="toast-header">
-				<img src="..." class="rounded me-2" alt="...">
-				<strong class="me-auto">Bootstrap</strong>
-				<small>11 mins ago</small>
+				<svg class="icon icon-sm" style="color: ${color}">
+					<use href="#${icon}" />
+				</svg>
+				<strong class="me-auto" style="color: ${color}">${status}</strong>
+				<div></div>
 				<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
 			</div>
 			<div id="toast-body" class="toast-body" style="display: grid, grid-template-columns: 9fr 1fr">
@@ -990,15 +994,15 @@ const App = {
 						const existingIds = new Set(existing.map((c) => c.id));
 						const newCircles = circles.filter((c) => !existingIds.has(c.id));
 						Storage.saveCircles([...existing, ...newCircles]);
-						this.showToast(`${newCircles.length}件のサークルを追加しました`);
+						this.showToast(`${newCircles.length}件のサークルを追加しました`, 0);
 					} else {
 						// 上書き
 						Storage.saveCircles(circles);
-						this.showToast(`${circles.length}件のサークルを読み込みました`);
+						this.showToast(`${circles.length}件のサークルを読み込みました`, 0);
 					}
 				} else {
 					Storage.saveCircles(circles);
-					this.showToast(`${circles.length}件のサークルを読み込みました`);
+					this.showToast(`${circles.length}件のサークルを読み込みました`, 0);
 				}
 				this.renderCircleList();
 				// ハッシュをクリア
@@ -1016,7 +1020,7 @@ const App = {
 
 		// URL長さチェック
 		if (url.length > 2000) {
-			this.showToast('⚠️ データ量が多すぎます。「コードで共有」を使用してください');
+			this.showToast('⚠️ データ量が多すぎます。「コードで共有」を使用してください', 2);
 			return;
 		}
 
@@ -1037,7 +1041,7 @@ const App = {
 
 		// URL長さチェック
 		if (url.length > 2000) {
-			this.showToast('⚠️ データ量が多すぎます。「コードで共有」を使用してください');
+			this.showToast('⚠️ データ量が多すぎます。「コードで共有」を使用してください', 2);
 			return;
 		}
 
@@ -1075,7 +1079,7 @@ const App = {
 		let input = document.getElementById('importCodeText').value.trim();
 
 		if (!input) {
-			this.showToast('コードまたはURLを入力してください');
+			this.showToast('コードまたはURLを入力してください', 1);
 			return;
 		}
 
@@ -1085,7 +1089,7 @@ const App = {
 			if (hashIndex !== -1) {
 				input = input.substring(hashIndex + 1);
 			} else {
-				this.showToast('無効なURLです');
+				this.showToast('無効なURLです', 2);
 				return;
 			}
 		}
@@ -1097,7 +1101,7 @@ const App = {
 			this.renderCircleList();
 			document.getElementById('importCodeModal').classList.add('hidden');
 		} else {
-			this.showToast(`エラー: ${result.error}`);
+			this.showToast(`エラー: ${result.error}`, 2);
 		}
 	},
 
@@ -1107,7 +1111,7 @@ const App = {
 	async copyShareURL() {
 		const url = document.getElementById('shareURLText').value;
 		const success = await Sync.copyToClipboard(url);
-		this.showToast(success ? 'URLをコピーしました' : 'コピーに失敗しました');
+		this.showToast(success ? ('URLをコピーしました', 0) : ('コピーに失敗しました', 2));
 	},
 
 	/**
@@ -1116,7 +1120,7 @@ const App = {
 	async copyShareCode() {
 		const code = document.getElementById('shareCodeText').value;
 		const success = await Sync.copyToClipboard(code);
-		this.showToast(success ? 'コードをコピーしました' : 'コピーに失敗しました');
+		this.showToast(success ? ('コードをコピーしました', 0) : ('コピーに失敗しました', 2));
 	},
 
 	/**
@@ -1201,12 +1205,12 @@ const App = {
 		try {
 			if (Storage.MapData) {
 				await Storage.MapData.deleteAllPages(areaKey);
-				this.showToast(`${areaName}のマップを削除しました`);
+				this.showToast(`${areaName}のマップを削除しました`, 0);
 				this.updateMapManagementList();
 			}
 		} catch (e) {
 			console.error('Failed to delete map:', e);
-			this.showToast('削除に失敗しました');
+			this.showToast('削除に失敗しました', 2);
 		}
 	},
 
@@ -1228,7 +1232,7 @@ const App = {
 				};
 			});
 
-			this.showToast('すべてのマップデータを削除しました');
+			this.showToast('すべてのマップデータを削除しました', 0);
 			this.updateMapManagementList();
 
 			// マップビューアをリロード
@@ -1237,7 +1241,7 @@ const App = {
 			}
 		} catch (e) {
 			console.error('Failed to reset all maps:', e);
-			this.showToast('リセットに失敗しました');
+			this.showToast('リセットに失敗しました', 2);
 		}
 	},
 };
