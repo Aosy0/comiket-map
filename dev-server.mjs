@@ -29,7 +29,7 @@ if (!GEMINI_API_KEY) {
 
 // ---- Gemini API プロキシ ----
 const GEMINI_HOST = 'generativelanguage.googleapis.com';
-const GEMINI_PATH = `/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_PATH = `/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
 
 function proxyGeminiAPI(req, res) {
 	if (!GEMINI_API_KEY) {
