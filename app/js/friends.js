@@ -16,6 +16,11 @@ const Friends = {
 	_chatFriendId: null,
 	_chatMessages: {}, // friendId -> [{name, text, timestamp, isMine}]
 
+	// 共有用WebSocket（QR生成・スキャン時に相互友達登録）
+	_shareWs: null,
+	_shareRoomId: null,
+	_shareMyName: null,
+
 	init() {
 		this.load();
 		this.bindEvents();
@@ -73,16 +78,22 @@ const Friends = {
 		if (myName === null) return null;
 
 		const roomId = this._generateRoomId();
+		const finalName = myName.trim() || defaultName;
 		const data = {
 			v: 1,
 			exp: Date.now() + this.QR_EXPIRY_MS,
-			name: myName.trim() || defaultName,
+			name: finalName,
 			roomId,
 			circles,
 		};
 		const encoded = this._encode(data);
 		const url = `${location.origin}${location.pathname}#friend=${encoded}`;
 		console.log('[ChatDebug] generated URL length:', url.length);
+
+		// WebSocket接続用に保存
+		this._pendingShareRoomId = roomId;
+		this._pendingShareName = finalName;
+
 		return url;
 	},
 
@@ -163,6 +174,73 @@ const Friends = {
 		}
 	},
 
+	// 共有用WebSocket接続（QR生成・スキャン時に相互友達登録）
+	_connectShareWs(roomId, name) {
+		this._disconnectShareWs();
+		this._shareRoomId = roomId;
+		this._shareMyName = name;
+
+		try {
+			const ws = new WebSocket(this.WS_URL);
+			this._shareWs = ws;
+
+			ws.onopen = () => {
+				ws.send(JSON.stringify({ type: 'join', roomId, name }));
+			};
+
+			ws.onmessage = (event) => {
+				try {
+					const msg = JSON.parse(event.data);
+					this._onShareMessage(msg);
+				} catch (e) {
+					console.error('Share message parse error:', e);
+				}
+			};
+
+			ws.onclose = () => {
+				this._shareWs = null;
+			};
+		} catch (e) {
+			console.error('Share WebSocket error:', e);
+		}
+	},
+
+	_disconnectShareWs() {
+		if (this._shareWs) {
+			try {
+				this._shareWs.close();
+			} catch (e) {}
+			this._shareWs = null;
+		}
+		this._shareRoomId = null;
+		this._shareMyName = null;
+	},
+
+	_onShareMessage(msg) {
+		switch (msg.type) {
+			case 'user-joined': {
+				const peerName = msg.name;
+				if (!peerName || peerName === this._shareMyName) return;
+				if (!this._shareRoomId) return;
+
+				const existing = this.friends.find(
+					(f) => f.name === peerName && f.roomId === this._shareRoomId,
+				);
+				if (existing) return;
+
+				this.addFriend({
+					name: peerName,
+					myName: this._shareMyName || '',
+					roomId: this._shareRoomId,
+					circles: [],
+				});
+				this.renderFriendsList();
+				App.showToast(`「${peerName}」が友達に追加されました`, 0);
+				break;
+			}
+		}
+	},
+
 	shareList() {
 		const url = this.generateShareURL();
 		if (!url) return;
@@ -184,16 +262,25 @@ const Friends = {
 		document.getElementById('shareModal').classList.remove('hidden');
 		this._startCountdown(expiryTime);
 
+		// QRコードをスキャンした相手と自動で友達登録するためのWebSocket接続
+		if (this._pendingShareRoomId && this._pendingShareName) {
+			this._connectShareWs(this._pendingShareRoomId, this._pendingShareName);
+		}
+
 		setTimeout(() => {
 			document.getElementById('shareModal').classList.add('hidden');
 			this._stopCountdown();
+			this._disconnectShareWs();
 			App.showToast('QRコードの有効期限が切れました', 0);
 		}, this.QR_EXPIRY_MS);
 	},
 
 	// === リアルタイムカメラスキャン ===
 	async startCameraScanner() {
+		console.log('[ChatDebug] startCameraScanner called');
+
 		if (!navigator.mediaDevices?.getUserMedia) {
+			console.error('[ChatDebug] getUserMedia not supported');
 			App.showToast('カメラに対応していません', 2);
 			return;
 		}
@@ -205,18 +292,22 @@ const Friends = {
 		status.textContent = 'カメラを起動しています...';
 
 		try {
+			console.log('[ChatDebug] Requesting camera access...');
 			const stream = await navigator.mediaDevices.getUserMedia({
 				video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } },
 				audio: false,
 			});
+			console.log('[ChatDebug] Camera stream obtained:', stream.getVideoTracks().length, 'tracks');
 			video.srcObject = stream;
 			await video.play();
+			console.log('[ChatDebug] Video playing, dimensions:', video.videoWidth, 'x', video.videoHeight);
 
 			status.textContent = 'QRコードを枠内に収めてください';
 			this._scanning = true;
+			console.log('[ChatDebug] Starting scan loop, jsQR type:', typeof jsQR);
 			this._scanLoop();
 		} catch (err) {
-			console.error('Camera error:', err);
+			console.error('[ChatDebug] Camera error:', err);
 			view.classList.add('hidden');
 			App.showToast('カメラにアクセスできません', 2);
 		}
@@ -242,15 +333,28 @@ const Friends = {
 	_scanLoop() {
 		if (!this._scanning) return;
 
+		if (typeof jsQR === 'undefined') {
+			console.error('[ChatDebug] jsQR library not loaded');
+			App.showToast('QR読み取りライブラリが読み込めません', 2);
+			this._scanning = false;
+			return;
+		}
+
+		console.log('[ChatDebug] _scanLoop started, jsQR:', typeof jsQR, 'default:', typeof jsQR.default);
+
 		const video = document.getElementById('cameraVideo');
 		const canvas = document.getElementById('cameraCanvas');
 		const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
+		let frameCount = 0;
+
 		const tick = () => {
 			if (!this._scanning) return;
 
+			frameCount++;
+
 			if (video.readyState >= video.HAVE_ENOUGH_DATA) {
-				const w = 320;
+				const w = 640;
 				const h = Math.round((video.videoHeight / video.videoWidth) * w);
 				canvas.width = w;
 				canvas.height = h;
@@ -258,16 +362,25 @@ const Friends = {
 				const imageData = ctx.getImageData(0, 0, w, h);
 
 				try {
-					const result = jsQR.default(imageData.data, w, h, {
-						inversionAttempts: 'dontInvert',
+					const jsQRFunc = typeof jsQR === 'function' ? jsQR : jsQR.default;
+					if (frameCount <= 5) {
+						console.log('[ChatDebug] Frame', frameCount, '- trying jsQR, func type:', typeof jsQRFunc);
+					}
+					const result = jsQRFunc(imageData.data, w, h, {
+						inversionAttempts: 'attemptBoth',
 					});
 					if (result?.data) {
+						console.log('[ChatDebug] QR detected:', result.data);
 						this._scanning = false;
 						this._handleDetectedQR(result.data);
 						return;
 					}
 				} catch (e) {
-					// ignore decode errors, keep scanning
+					console.error('[ChatDebug] QR decode error:', e);
+				}
+			} else {
+				if (frameCount <= 5) {
+					console.log('[ChatDebug] Frame', frameCount, '- video not ready, readyState:', video.readyState);
 				}
 			}
 
@@ -312,6 +425,11 @@ const Friends = {
 			});
 			this.renderFriendsList();
 			App.showToast(`「${peerName}」を友達に追加しました`, 0);
+
+			// 相手に自分が参加したことを通知（相互友達登録）
+			if (data.roomId) {
+				this._connectShareWs(data.roomId, myName.trim() || defaultName);
+			}
 		} catch (err) {
 			console.error('[ChatDebug] error:', err);
 			App.showToast(err.message, 2);
@@ -334,8 +452,8 @@ const Friends = {
 			const ctx = canvas.getContext('2d', { willReadFrequently: true });
 			ctx.drawImage(img, 0, 0, width, height);
 			const imageData = ctx.getImageData(0, 0, width, height);
-			// default inversionAttempts = 'attemptBoth'（白黒反転の両方を試す）
-			return jsQR.default(imageData.data, imageData.width, imageData.height, {
+			const jsQRFunc = typeof jsQR === 'function' ? jsQR : jsQR.default;
+			return jsQRFunc(imageData.data, imageData.width, imageData.height, {
 				inversionAttempts: 'attemptBoth',
 			});
 		};
@@ -495,6 +613,11 @@ const Friends = {
 		});
 		this.renderFriendsList();
 		App.showToast(`「${peerName}」を友達に追加しました`, 0);
+
+		// 相手に自分が参加したことを通知（相互友達登録）
+		if (data.roomId) {
+			this._connectShareWs(data.roomId, myName.trim() || defaultName);
+		}
 	},
 
 	// ================================================================
