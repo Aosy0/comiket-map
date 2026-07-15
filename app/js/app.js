@@ -286,16 +286,16 @@ const App = {
 
 		// AIチャットを開く
 		const openAIChatBtn = document.getElementById('open-aichat');
-		if(openAIChatBtn) {
+		if (openAIChatBtn) {
 			openAIChatBtn.addEventListener('click', () => {
 				document.getElementById('aichat').classList.add('show');
 				document.body.classList.add('aichat-open');
 			});
 		}
-		
+
 		// AIチャットを閉じる
 		const closeAIChatBtn = document.getElementById('close-aichat');
-		if(closeAIChatBtn) {
+		if (closeAIChatBtn) {
 			closeAIChatBtn.addEventListener('click', () => {
 				document.getElementById('aichat').classList.remove('show');
 				document.body.classList.remove('aichat-open');
@@ -305,132 +305,129 @@ const App = {
 		// 吹き出しの1行あたりの文字数制限
 		// 全角換算で maxWidth 文字ごとに改行を挿入する
 		const wrapText = (text, maxWidth = 30) => {
-				const lines = [];
+			const lines = [];
 
-				// ユーザーが自分で入力した改行はそのまま尊重する
-				for (const paragraph of text.split('\n')) {
-						let line = '';
-						let lineWidth = 0;
+			// ユーザーが自分で入力した改行はそのまま尊重する
+			for (const paragraph of text.split('\n')) {
+				let line = '';
+				let lineWidth = 0;
 
-						for (const char of paragraph) {
-								const charWidth = /[^\x00-\xff]/.test(char) ? 2 : 1; // 全角=2、半角=1
-								
-								if (lineWidth + charWidth > maxWidth) {
-										lines.push(line);
-										line = char;
-										lineWidth = charWidth;
-								} else {
-										line += char;
-										lineWidth += charWidth;
-								}
-						}
+				for (const char of paragraph) {
+					const charWidth = /[^\x00-\xff]/.test(char) ? 2 : 1; // 全角=2、半角=1
+
+					if (lineWidth + charWidth > maxWidth) {
 						lines.push(line);
+						line = char;
+						lineWidth = charWidth;
+					} else {
+						line += char;
+						lineWidth += charWidth;
+					}
 				}
-				return lines.join('\n');
-		}
+				lines.push(line);
+			}
+			return lines.join('\n');
+		};
 
 		// GeminiAPIの呼び出し
 		let systemInstruction = null;
 		const callGeminiAPI = async (prompt) => {
 			if (!systemInstruction) {
-        systemInstruction = await fetch('/system_instruction.txt').then(res => res.text());
+				systemInstruction = await fetch('/system_instruction.txt').then((res) => res.text());
 			}
-			try{
+			try {
 				const response = await fetch('/api/gemini', {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json",
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						system_instruction: {
+							parts: [{ text: systemInstruction }],
 						},
-						body: JSON.stringify({
-							system_instruction: {
-								parts: [
-									{text: systemInstruction}
-								]
+						contents: [
+							{
+								parts: [{ text: prompt }],
 							},
-							contents: [{
-								parts: [
-									{text: prompt}
-								]
-							}]
-						})
-					}
-				);
+						],
+					}),
+				});
 				const data = await response.json();
 				console.log(data);
 
 				if (!response.ok) {
-            const status = data.error?.status;
-            if (status === 'RESOURCE_EXHAUSTED') {
-                return 'リクエストが多すぎます。少し待ってから再度お試しください。';
-            }
-            return `エラーが発生しました（${response.status}）`;
-        }
+					const status = data.error?.status;
+					if (status === 'RESOURCE_EXHAUSTED') {
+						return 'リクエストが多すぎます。少し待ってから再度お試しください。';
+					}
+					return `エラーが発生しました（${response.status}）`;
+				}
 
 				return data.candidates[0].content.parts[0].text;
-			} catch(e) {
+			} catch (e) {
 				console.error('Gemini APIエラー:', e);
-				return `エラーが発生しました`
+				return 'エラーが発生しました';
 			}
-		}
+		};
 
 		const aichatForm = document.getElementById('aichat-form');
 		const promptSubmitButton = document.getElementById('aichat-submitbutton');
-		if(aichatForm && promptSubmitButton) {
+		if (aichatForm && promptSubmitButton) {
 			promptSubmitButton.addEventListener('click', async () => {
-			const prompt = aichatForm.value;
-			aichatForm.value = "";
-			aichatForm.disabled = true;
-			const aichatBody = document.getElementById('aichat-body');
-			
-			if (aichatBody) {
-				// 折り返し処理 + HTMLエスケープ（XSS対策）
-				const wrappedPrompt = wrapText(prompt, 30)
+				const prompt = aichatForm.value;
+				aichatForm.value = '';
+				aichatForm.disabled = true;
+				const aichatBody = document.getElementById('aichat-body');
+
+				if (aichatBody) {
+					// 折り返し処理 + HTMLエスケープ（XSS対策）
+					const wrappedPrompt = wrapText(prompt, 30)
 						.replace(/&/g, '&amp;')
 						.replace(/</g, '&lt;')
 						.replace(/>/g, '&gt;')
 						.replace(/\n/g, '<br>');
-				const promptHTML = `
+					const promptHTML = `
 						<div class="aichat-speechbubble-user-container">
 								<div class="aichat-speechbubble-user">
 										${wrappedPrompt}
 								</div>
 						</div>`;
-				aichatBody.insertAdjacentHTML("beforeend", promptHTML);
+					aichatBody.insertAdjacentHTML('beforeend', promptHTML);
 
-				const waitingForReplyHTML = `
+					const waitingForReplyHTML = `
 					<div id='waitingForReply' class="aichat-speechbubble-ai-container">
 							<div class="aichat-speechbubble-ai">
 									入力中...
 							</div>
 					</div>`;
-				aichatBody.insertAdjacentHTML("beforeend", waitingForReplyHTML);
+					aichatBody.insertAdjacentHTML('beforeend', waitingForReplyHTML);
 
-				const reply = await callGeminiAPI(prompt);
-				if(reply) {
-					if(document.getElementById('waitingForReply')) {
-						document.getElementById('waitingForReply').remove();
-					}
+					const reply = await callGeminiAPI(prompt);
+					if (reply) {
+						if (document.getElementById('waitingForReply')) {
+							document.getElementById('waitingForReply').remove();
+						}
 
-					const wrappedReply = wrapText(reply, 30)
+						const wrappedReply = wrapText(reply, 30)
 							.replace(/&/g, '&amp;')
 							.replace(/</g, '&lt;')
 							.replace(/>/g, '&gt;')
 							.replace(/\n/g, '<br>');
-					const replyHTML = `
+						const replyHTML = `
 						<div class="aichat-speechbubble-ai-container">
 								<div class="aichat-speechbubble-ai">
 										${wrappedReply}
 								</div>
 						</div>`;
-					aichatBody.insertAdjacentHTML("beforeend", replyHTML);
-				}
+						aichatBody.insertAdjacentHTML('beforeend', replyHTML);
+					}
 
-				if(document.getElementById('waitingForReply')) {
-					document.getElementById('waitingForReply').remove();
-				}
+					if (document.getElementById('waitingForReply')) {
+						document.getElementById('waitingForReply').remove();
+					}
 
-				aichatForm.disabled = false;
-			}
+					aichatForm.disabled = false;
+				}
 			});
 		}
 	},
@@ -465,7 +462,7 @@ const App = {
 		}
 
 		// タブ切り替え時にAIチャット画面を閉じる
-		if(document.getElementById('aichat')) {
+		if (document.getElementById('aichat')) {
 			document.getElementById('aichat').classList.remove('show');
 			document.body.classList.remove('aichat-open');
 		}
@@ -964,11 +961,11 @@ const App = {
 		const toast = document.getElementById('toast');
 		if (!toast) return;
 
-		if(document.getElementById("toast-header")) {
-			document.getElementById("toast-header").remove();
+		if (document.getElementById('toast-header')) {
+			document.getElementById('toast-header').remove();
 		}
-		if(document.getElementById("toast-body")) {
-			document.getElementById("toast-body").remove();
+		if (document.getElementById('toast-body')) {
+			document.getElementById('toast-body').remove();
 		}
 
 		const status = getToastStatus(index);
@@ -986,9 +983,16 @@ const App = {
 			<div id="toast-body" class="toast-body" style="display: grid, grid-template-columns: 9fr 1fr">
 				${message}
 			</div>`;
-		toast.insertAdjacentHTML("afterbegin", toastHtml);
-		const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
-		toastBootstrap.show()
+		toast.insertAdjacentHTML('afterbegin', toastHtml);
+
+		try {
+			const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
+			toastBootstrap.show();
+		} catch (e) {
+			console.warn('showToast fallback (bootstrap unavailable):', message);
+			toast.style.display = 'block';
+			setTimeout(() => { toast.style.display = ''; }, index === 2 ? 5000 : 3000);
+		}
 	},
 
 	/**

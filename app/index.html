@@ -324,9 +324,40 @@
                 友達一覧
               </button>
               <span id="friendDetailName" class="friend-detail-title"></span>
+              <button id="openChatBtn" class="friend-chat-btn hidden" title="チャット">
+                <svg class="icon"><use href="#icon-send" /></svg>
+              </button>
+            </div>
+            <div id="friendChatSection" class="friend-chat-section hidden">
+              <button id="openChatBtn2" class="friend-chat-open-btn">
+                <svg class="icon icon-sm"><use href="#icon-send" /></svg>
+                チャットを開く
+              </button>
             </div>
             <div id="friendCircleList" class="circle-list">
               <p class="empty-message">サークルがありません</p>
+            </div>
+          </div>
+
+          <!-- チャットビュー -->
+          <div id="chatView" class="chat-view hidden">
+            <div class="chat-header">
+              <button id="chatBackBtn" class="chat-back-btn">
+                <svg class="icon"><use href="#icon-back" /></svg>
+              </button>
+              <div class="chat-header-info">
+                <span id="chatViewName" class="chat-header-name"></span>
+                <span id="chatStatus" class="chat-header-status">接続中...</span>
+              </div>
+            </div>
+            <div id="chatMessages" class="chat-messages">
+              <p class="chat-empty">メッセージはまだありません</p>
+            </div>
+            <div class="chat-input-area">
+              <textarea id="chatInput" class="chat-input" rows="1" placeholder="メッセージを入力..."></textarea>
+              <button id="chatSendBtn" class="chat-send-btn">
+                <svg class="icon"><use href="#icon-send" /></svg>
+              </button>
             </div>
           </div>
 
@@ -756,6 +787,7 @@
             <img id="shareQRImage" src="" alt="QRコード" class="qr-image" />
           </div>
           <p id="shareExpiryInfo" class="sync-info" style="margin-top:12px;"></p>
+          <p id="shareCountdown" class="sync-info" style="margin-top:4px;font-size:1.2em;font-weight:bold;"></p>
           <p class="sync-hint">相手にこのQRコードを見せてスキャンしてもらってください</p>
         </div>
       </div>

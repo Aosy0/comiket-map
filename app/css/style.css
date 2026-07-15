@@ -207,8 +207,6 @@ main {
 	min-height: calc(100dvh - 100px - 56px);
 }
 
-
-
 /* マップタブ専用レイアウト - ボタン固定 & スクロール無効 */
 #tab-map {
 	display: none;
@@ -604,7 +602,7 @@ main {
 
 #tab-communication {
 	position: relative;
-  height: calc(100dvh - 70.8px - 57.8px);
+	height: calc(100dvh - 70.8px - 57.8px);
 }
 
 /* AIチャット */
@@ -721,7 +719,7 @@ body.aichat-open {
 	height: 56px;
 	width: 100%;
 	padding: 0 8px;
-	color: var(--primary)
+	color: var(--primary);
 }
 
 .aichat-speechbubble-user-container {
@@ -1339,9 +1337,9 @@ input:checked + .toggle-slider:before {
 		gap: 12px;
 	}
 
-  .circle-list.compact {
-    grid-template-columns: 1fr 1fr;
-  }
+	.circle-list.compact {
+		grid-template-columns: 1fr 1fr;
+	}
 }
 
 @media (min-width: 1200px) {
@@ -1385,6 +1383,261 @@ input:checked + .toggle-slider:before {
 
 .priority-option.low {
 	color: var(--priority-low);
+}
+
+/* ===========================================
+   チャットUI
+   =========================================== */
+
+/* 友達詳細 - チャットボタン */
+.friend-chat-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border: none;
+	background: var(--primary);
+	color: #fff;
+	border-radius: 50%;
+	cursor: pointer;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+.friend-chat-btn:active {
+	opacity: 0.8;
+}
+
+.friend-chat-btn.hidden {
+	display: none;
+}
+
+/* 友達詳細 - チャット案内セクション */
+.friend-chat-section {
+	margin-bottom: 12px;
+}
+
+.friend-chat-open-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: 100%;
+	padding: 10px;
+	border: 1px solid var(--primary);
+	background: var(--card);
+	color: var(--primary);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	cursor: pointer;
+}
+
+.friend-chat-open-btn:active {
+	background: #e8f0fe;
+}
+
+/* チャットビュー全体 */
+.chat-view {
+	display: none;
+	flex-direction: column;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: var(--bg);
+	z-index: 50;
+}
+
+.chat-view.hidden {
+	display: none;
+}
+
+.chat-view:not(.hidden) {
+	display: flex;
+}
+
+/* チャットヘッダー */
+.chat-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px;
+	background: var(--card);
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
+}
+
+.chat-back-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: none;
+	background: none;
+	cursor: pointer;
+	color: var(--text);
+	flex-shrink: 0;
+}
+
+.chat-header-info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.chat-header-name {
+	font-weight: 600;
+	font-size: 0.9375rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.chat-header-status {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+}
+
+/* チャットメッセージ領域 */
+.chat-messages {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.chat-empty {
+	text-align: center;
+	color: var(--text-secondary);
+	padding: 32px 16px;
+	font-size: 0.875rem;
+}
+
+/* メッセージ行 */
+.chat-msg {
+	display: flex;
+	flex-direction: column;
+	max-width: 85%;
+	gap: 2px;
+}
+
+.chat-msg-mine {
+	align-self: flex-end;
+	align-items: flex-end;
+}
+
+.chat-msg-peer {
+	align-self: flex-start;
+	align-items: flex-start;
+}
+
+/* 吹き出し */
+.chat-bubble {
+	padding: 10px 14px;
+	border-radius: 16px;
+	word-break: break-word;
+	line-height: 1.4;
+}
+
+.chat-bubble-text {
+	font-size: 0.9375rem;
+}
+
+.chat-bubble-mine {
+	background: var(--primary);
+	color: #fff;
+	border-bottom-right-radius: 4px;
+}
+
+.chat-bubble-peer {
+	background: var(--card);
+	color: var(--text);
+	border-bottom-left-radius: 4px;
+	border: 1px solid var(--border);
+}
+
+/* 吹き出し内の名前 */
+.chat-bubble-name {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--primary);
+	margin-bottom: 2px;
+}
+
+/* タイムスタンプ */
+.chat-time {
+	font-size: 0.6875rem;
+	color: var(--text-secondary);
+	padding: 0 4px;
+}
+
+/* システムメッセージ */
+.chat-system-msg {
+	text-align: center;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	padding: 4px 0;
+}
+
+/* チャット入力エリア */
+.chat-input-area {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	padding: 8px 12px;
+	padding-bottom: max(8px, var(--safe-bottom));
+	background: var(--card);
+	border-top: 1px solid var(--border);
+	flex-shrink: 0;
+}
+
+.chat-input {
+	flex: 1;
+	border: 1px solid var(--border);
+	border-radius: 20px;
+	padding: 10px 16px;
+	font-size: 0.9375rem;
+	background: var(--bg);
+	color: var(--text);
+	resize: none;
+	min-height: 40px;
+	max-height: 120px;
+	outline: none;
+	font-family: inherit;
+	line-height: 1.4;
+}
+
+.chat-input:focus {
+	border-color: var(--primary);
+}
+
+.chat-send-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border: none;
+	background: var(--primary);
+	color: #fff;
+	border-radius: 50%;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.chat-send-btn:active {
+	opacity: 0.8;
+}
+
+.chat-send-btn .icon {
+	width: 20px;
+	height: 20px;
 }
 
 /* 同期・QRコード */

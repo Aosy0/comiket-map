@@ -1,14 +1,20 @@
 /**
  * 友達管理モジュール
- * QRコード共有・スキャン、友達一覧・詳細表示
+ * QRコード共有・スキャン、友達一覧・詳細表示、チャット
  */
 const Friends = {
 	STORAGE_KEY: 'C108_friends',
 	QR_EXPIRY_MS: 5 * 60 * 1000,
+	WS_URL: typeof CONFIG !== 'undefined' && CONFIG.CHAT_WS_URL ? CONFIG.CHAT_WS_URL : `ws://${location.hostname}:3001`,
 
 	friends: [],
 	_scanning: false,
 	_scanLoopId: null,
+
+	// チャット状態
+	_chatWs: null,
+	_chatFriendId: null,
+	_chatMessages: {}, // friendId -> [{name, text, timestamp, isMine}]
 
 	init() {
 		this.load();
@@ -30,29 +36,59 @@ const Friends = {
 	},
 
 	_encode(obj) {
-		// URL安全なbase64url形式で出力（+→-、/→_、=除去）
 		const base64 = btoa(encodeURIComponent(JSON.stringify(obj)));
 		return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 	},
 
 	_decode(str) {
-		// base64url → 標準base64 に戻す
 		let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-		// パディングを復元（4の倍数に揃える）
 		const r = base64.length % 4;
 		if (r === 2) base64 += '==';
 		else if (r === 3) base64 += '=';
 		return JSON.parse(decodeURIComponent(atob(base64)));
 	},
 
+	_generateRoomId() {
+		return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+	},
+
+	/**
+	 * 共有URLを生成（QRコード用）
+	 * 自分の名前を入力させ、ルームIDを発行する
+	 */
 	generateShareURL() {
+		const circles = Storage.getCircles();
+		console.log('[ChatDebug] circles count:', circles.length);
+		if (circles.length === 0) {
+			App.showToast('サークルが登録されていません', 1);
+			return null;
+		}
+
+		const defaultName = this._defaultMyName();
+		const myName = prompt(
+			`${circles.length}件のサークルを共有します。\n相手に表示されるあなたの名前を入力してください。`,
+			defaultName,
+		);
+		console.log('[ChatDebug] prompt result:', myName);
+		if (myName === null) return null;
+
+		const roomId = this._generateRoomId();
 		const data = {
 			v: 1,
 			exp: Date.now() + this.QR_EXPIRY_MS,
-			circles: Storage.getCircles(),
+			name: myName.trim() || defaultName,
+			roomId,
+			circles,
 		};
 		const encoded = this._encode(data);
-		return `${location.origin}${location.pathname}#friend=${encoded}`;
+		const url = `${location.origin}${location.pathname}#friend=${encoded}`;
+		console.log('[ChatDebug] generated URL length:', url.length);
+		return url;
+	},
+
+	_defaultMyName() {
+		const now = new Date();
+		return `名無し${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
 	},
 
 	decodeFriendData(encoded) {
@@ -65,10 +101,16 @@ const Friends = {
 		}
 	},
 
+	/**
+	 * 友達を追加
+	 * @param {Object} data - { name, circles, roomId, myName }
+	 */
 	addFriend(data) {
 		const friend = {
 			id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
 			name: data.name || '友達',
+			myName: data.myName || '',
+			roomId: data.roomId || '',
 			circles: data.circles || [],
 			addedAt: new Date().toISOString(),
 		};
@@ -79,6 +121,7 @@ const Friends = {
 
 	deleteFriend(id) {
 		if (!confirm('この友達を削除しますか？')) return;
+		this.closeChat();
 		this.friends = this.friends.filter((f) => f.id !== id);
 		this.save();
 		if (this.currentFriendId === id) this.showFriendsList();
@@ -91,35 +134,59 @@ const Friends = {
 	},
 
 	// === 共有 ===
-	shareList() {
-		const circles = Storage.getCircles();
-		if (circles.length === 0) {
-			App.showToast('サークルが登録されていません', 1);
-			return;
-		}
-		const size = JSON.stringify(circles).length;
-		if (size > 50000) {
-			App.showToast('データ量が多すぎます（50KB以内推奨）', 2);
-			return;
-		}
+	_countdownIntervalId: null,
 
+	_startCountdown(endTime) {
+		this._stopCountdown();
+		const el = document.getElementById('shareCountdown');
+		if (!el) return;
+
+		const tick = () => {
+			const remaining = endTime - Date.now();
+			if (remaining <= 0) {
+				el.textContent = '期限切れ';
+				this._stopCountdown();
+				return;
+			}
+			const m = Math.floor(remaining / 60000);
+			const s = Math.floor((remaining % 60000) / 1000);
+			el.textContent = `残り ${m}:${String(s).padStart(2, '0')}`;
+		};
+		tick();
+		this._countdownIntervalId = setInterval(tick, 1000);
+	},
+
+	_stopCountdown() {
+		if (this._countdownIntervalId) {
+			clearInterval(this._countdownIntervalId);
+			this._countdownIntervalId = null;
+		}
+	},
+
+	shareList() {
 		const url = this.generateShareURL();
+		if (!url) return;
+
 		if (url.length > 4000) {
 			App.showToast('データ量が多すぎます', 2);
 			return;
 		}
 
+		console.log('[ChatDebug] Share URL:', url);
 		const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
 		document.getElementById('shareQRImage').src = qrSrc;
 
-		const expiry = new Date(Date.now() + this.QR_EXPIRY_MS);
+		const expiryTime = Date.now() + this.QR_EXPIRY_MS;
+		const expiry = new Date(expiryTime);
 		document.getElementById('shareExpiryInfo').textContent =
 			`このQRコードは5分間（${String(expiry.getHours()).padStart(2, '0')}:${String(expiry.getMinutes()).padStart(2, '0')}まで）有効です`;
 
 		document.getElementById('shareModal').classList.remove('hidden');
+		this._startCountdown(expiryTime);
 
 		setTimeout(() => {
 			document.getElementById('shareModal').classList.add('hidden');
+			this._stopCountdown();
 			App.showToast('QRコードの有効期限が切れました', 0);
 		}, this.QR_EXPIRY_MS);
 	},
@@ -163,12 +230,13 @@ const Friends = {
 		}
 
 		const video = document.getElementById('cameraVideo');
-		if (video.srcObject) {
+		if (video && video.srcObject) {
 			video.srcObject.getTracks().forEach((t) => t.stop());
 			video.srcObject = null;
 		}
 
-		document.getElementById('cameraView').classList.add('hidden');
+		const cameraView = document.getElementById('cameraView');
+		if (cameraView) cameraView.classList.add('hidden');
 	},
 
 	_scanLoop() {
@@ -210,27 +278,42 @@ const Friends = {
 	},
 
 	_handleDetectedQR(text) {
-		this.stopCameraScanner();
+		console.log('[ChatDebug] _handleDetectedQR called with:', text);
 
 		try {
+			this.stopCameraScanner();
 			const hashIndex = text.indexOf('#');
+			console.log('[ChatDebug] hashIndex:', hashIndex);
 			if (hashIndex === -1) throw new Error('無効なデータです');
 			const hash = text.slice(hashIndex + 1);
+			console.log('[ChatDebug] hash:', hash);
 			if (!hash.startsWith('friend=')) throw new Error('無効なデータです');
 
 			const data = this.decodeFriendData(hash.slice('friend='.length));
+			console.log('[ChatDebug] decoded data:', data);
 			if (!data) throw new Error('データの解析に失敗しました');
 			if (Date.now() > data.exp) throw new Error('QRコードの有効期限が切れています');
 
-			const name = prompt(
-				`${data.circles.length}件のサークルを受け取りました。\n友達の名前を入力してください`,
-				this._defaultName(),
+			// data.name が送信者の名前、data.roomId がチャットルームID
+			const peerName = data.name || '友達';
+			const defaultName = `名無し${String(new Date().getHours()).padStart(2, '0')}${String(new Date().getMinutes()).padStart(2, '0')}`;
+			const myName = prompt(
+				`「${peerName}」から${data.circles.length}件のサークルを受け取りました。\nあなたの名前を入力してください（相手に表示されます）`,
+				defaultName,
 			);
-			if (name === null) return;
-			this.addFriend({ name: name || '友達', circles: data.circles });
+			console.log('[ChatDebug] prompt result:', myName);
+			if (myName === null) return;
+
+			this.addFriend({
+				name: peerName,
+				myName: myName.trim() || defaultName,
+				roomId: data.roomId || '',
+				circles: data.circles,
+			});
 			this.renderFriendsList();
-			App.showToast('友達を追加しました', 0);
+			App.showToast(`「${peerName}」を友達に追加しました`, 0);
 		} catch (err) {
+			console.error('[ChatDebug] error:', err);
 			App.showToast(err.message, 2);
 		}
 	},
@@ -244,22 +327,48 @@ const Friends = {
 			el.src = URL.createObjectURL(file);
 		});
 
-		const canvas = document.createElement('canvas');
-		canvas.width = img.naturalWidth;
-		canvas.height = img.naturalHeight;
-		const ctx = canvas.getContext('2d');
-		ctx.drawImage(img, 0, 0);
-		const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+		const tryDecode = (width, height) => {
+			const canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext('2d', { willReadFrequently: true });
+			ctx.drawImage(img, 0, 0, width, height);
+			const imageData = ctx.getImageData(0, 0, width, height);
+			// default inversionAttempts = 'attemptBoth'（白黒反転の両方を試す）
+			return jsQR.default(imageData.data, imageData.width, imageData.height, {
+				inversionAttempts: 'attemptBoth',
+			});
+		};
+
+		// 元のサイズで試行
+		let result = tryDecode(img.naturalWidth, img.naturalHeight);
+
+		// 失敗した場合、縮小して再試行（大きな画像はノイズが多く認識率が下がるため）
+		if (!result && img.naturalWidth > 1200) {
+			const scale = 1200 / img.naturalWidth;
+			result = tryDecode(1200, Math.round(img.naturalHeight * scale));
+		}
+		if (!result && img.naturalWidth > 800) {
+			const scale = 800 / img.naturalWidth;
+			result = tryDecode(800, Math.round(img.naturalHeight * scale));
+		}
+
 		URL.revokeObjectURL(img.src);
 
-		const result = jsQR.default(imageData.data, imageData.width, imageData.height);
 		if (!result) throw new Error('QRコードを読み取れませんでした');
 		return result.data;
 	},
 
 	async handleQRScanFromFile(file) {
-		const text = await this.processQRImage(file);
-		this._handleDetectedQR(text);
+		console.log('[ChatDebug] handleQRScanFromFile called');
+		try {
+			const text = await this.processQRImage(file);
+			console.log('[ChatDebug] QR text extracted:', text);
+			this._handleDetectedQR(text);
+		} catch (err) {
+			console.error('[ChatDebug] QR scan error:', err);
+			App.showToast(err.message, 2);
+		}
 	},
 
 	// === 友達一覧 ===
@@ -278,7 +387,7 @@ const Friends = {
 			<div class="friend-item" data-id="${f.id}">
 				<div class="friend-item-info">
 					<div class="friend-item-name">${App.escapeHtml(f.name)}</div>
-					<div class="friend-item-meta">${f.circles.length}件のサークル</div>
+					<div class="friend-item-meta">${f.circles.length}件のサークル${f.roomId ? ' • チャット可' : ''}</div>
 				</div>
 				<button class="friend-delete-btn" data-id="${f.id}">削除</button>
 			</div>`,
@@ -299,6 +408,7 @@ const Friends = {
 		});
 	},
 
+	// === 友達詳細 ===
 	showFriendDetail(id) {
 		const friend = this.friends.find((f) => f.id === id);
 		if (!friend) return;
@@ -307,6 +417,18 @@ const Friends = {
 		document.getElementById('friendsListView').classList.add('hidden');
 		document.getElementById('friendDetailView').classList.remove('hidden');
 		document.getElementById('friendDetailName').textContent = friend.name;
+
+		// チャットセクションの表示/非表示
+		const chatSection = document.getElementById('friendChatSection');
+		const chatHeaderBtn = document.getElementById('openChatBtn');
+		if (friend.roomId) {
+			if (chatSection) chatSection.classList.remove('hidden');
+			if (chatHeaderBtn) chatHeaderBtn.classList.remove('hidden');
+		} else {
+			if (chatSection) chatSection.classList.add('hidden');
+			if (chatHeaderBtn) chatHeaderBtn.classList.add('hidden');
+		}
+
 		this._renderFriendCircles(friend);
 	},
 
@@ -339,6 +461,7 @@ const Friends = {
 	},
 
 	showFriendsList() {
+		this.closeChat();
 		document.getElementById('friendsListView').classList.remove('hidden');
 		document.getElementById('friendDetailView').classList.add('hidden');
 		this.currentFriendId = null;
@@ -356,11 +479,318 @@ const Friends = {
 			return;
 		}
 
-		const name = prompt('友達の名前を入力してください', this._defaultName());
-		if (name === null) return;
-		this.addFriend({ name: name || '友達', circles: data.circles });
+		const peerName = data.name || '友達';
+		const defaultName = `名無し${String(new Date().getHours()).padStart(2, '0')}${String(new Date().getMinutes()).padStart(2, '0')}`;
+		const myName = prompt(
+			`「${peerName}」から${data.circles.length}件のサークルを受け取りました。\nあなたの名前を入力してください（相手に表示されます）`,
+			defaultName,
+		);
+		if (myName === null) return;
+
+		this.addFriend({
+			name: peerName,
+			myName: myName.trim() || defaultName,
+			roomId: data.roomId || '',
+			circles: data.circles,
+		});
 		this.renderFriendsList();
-		App.showToast('友達を追加しました', 0);
+		App.showToast(`「${peerName}」を友達に追加しました`, 0);
+	},
+
+	// ================================================================
+	//  チャット機能
+	// ================================================================
+
+	/**
+	 * チャット画面を開く
+	 */
+	openChat(friendId) {
+		const friend = this.friends.find((f) => f.id === friendId);
+		if (!friend || !friend.roomId) return;
+
+		this._chatFriendId = friendId;
+		if (!this._chatMessages[friendId]) {
+			this._chatMessages[friendId] = [];
+		}
+
+		// チャットビューを表示
+		document.getElementById('friendDetailView').classList.add('hidden');
+		document.getElementById('chatView').classList.remove('hidden');
+
+		// ヘッダーに相手の名前を設定
+		document.getElementById('chatViewName').textContent = friend.name;
+
+		// 接続状態を更新
+		this._updateChatStatus('接続中...');
+
+		// WebSocket接続
+		this._connectChatWs(friend);
+
+		// 過去のメッセージを表示
+		this._renderChatMessages();
+
+		// 入力欄をフォーカス
+		const input = document.getElementById('chatInput');
+		if (input) setTimeout(() => input.focus(), 300);
+	},
+
+	/**
+	 * チャット画面を閉じる
+	 */
+	closeChat() {
+		this._disconnectChatWs();
+		this._chatFriendId = null;
+
+		document.getElementById('chatView').classList.add('hidden');
+		// friendDetailViewの表示状態は呼び出し元で制御
+	},
+
+	/**
+	 * WebSocketに接続
+	 */
+	_connectChatWs(friend) {
+		this._disconnectChatWs();
+
+		try {
+			const ws = new WebSocket(this.WS_URL);
+			this._chatWs = ws;
+
+			ws.onopen = () => {
+				// ルームに参加
+				ws.send(
+					JSON.stringify({
+						type: 'join',
+						roomId: friend.roomId,
+						name: friend.myName || '名無し',
+					}),
+				);
+			};
+
+			ws.onmessage = (event) => {
+				try {
+					const msg = JSON.parse(event.data);
+					this._onChatMessage(msg);
+				} catch (e) {
+					console.error('Chat message parse error:', e);
+				}
+			};
+
+			ws.onclose = () => {
+				if (this._chatWs === ws) {
+					this._updateChatStatus('オフライン');
+					this._chatWs = null;
+				}
+			};
+
+			ws.onerror = () => {
+				this._updateChatStatus('接続エラー');
+			};
+		} catch (e) {
+			console.error('WebSocket connection error:', e);
+			this._updateChatStatus('接続エラー');
+		}
+	},
+
+	/**
+	 * WebSocket切断
+	 */
+	_disconnectChatWs() {
+		if (this._chatWs) {
+			try {
+				this._chatWs.close();
+			} catch (e) {
+				// ignore
+			}
+			this._chatWs = null;
+		}
+	},
+
+	/**
+	 * WebSocketからのメッセージを処理
+	 */
+	_onChatMessage(msg) {
+		const friendId = this._chatFriendId;
+		if (!friendId) return;
+
+		switch (msg.type) {
+			case 'joined':
+				this._updateChatStatus('接続済み');
+				break;
+
+			case 'peer-count':
+				this._updateChatStatus(msg.peerCount >= 2 ? 'オンライン' : '待機中');
+				break;
+
+			case 'user-joined':
+				this._updateChatStatus('オンライン');
+				this._addMessageToCache(friendId, {
+					name: '',
+					text: `「${msg.name}」が参加しました`,
+					timestamp: Date.now(),
+					isMine: false,
+					isSystem: true,
+				});
+				break;
+
+			case 'user-left':
+				this._updateChatStatus('相手が退出しました');
+				this._addMessageToCache(friendId, {
+					name: '',
+					text: `「${msg.name}」が退出しました`,
+					timestamp: Date.now(),
+					isMine: false,
+					isSystem: true,
+				});
+				break;
+
+			case 'message': {
+				const friend = this.friends.find((f) => f.id === friendId);
+				const isMine = friend ? msg.name === friend.myName : false;
+				this._addMessageToCache(friendId, {
+					name: msg.name,
+					text: msg.text,
+					timestamp: msg.timestamp,
+					isMine,
+				});
+				break;
+			}
+
+			case 'message-sent':
+				// 自分の送信確認（既にキャッシュ済みなのでスキップ）
+				break;
+
+			case 'pong':
+				break;
+
+			case 'error':
+				App.showToast(`チャットエラー: ${msg.message}`, 2);
+				break;
+		}
+	},
+
+	/**
+	 * メッセージをキャッシュに追加してUIを更新
+	 */
+	_addMessageToCache(friendId, msg) {
+		if (!this._chatMessages[friendId]) {
+			this._chatMessages[friendId] = [];
+		}
+		this._chatMessages[friendId].push(msg);
+		this._renderChatMessages();
+	},
+
+	/**
+	 * チャットメッセージ一覧を描画
+	 */
+	_renderChatMessages() {
+		const container = document.getElementById('chatMessages');
+		if (!container) return;
+
+		const friendId = this._chatFriendId;
+		const messages = friendId ? this._chatMessages[friendId] || [] : [];
+
+		if (messages.length === 0) {
+			container.innerHTML = '<p class="chat-empty">メッセージはまだありません</p>';
+			return;
+		}
+
+		container.innerHTML = messages
+			.map((msg) => {
+				if (msg.isSystem) {
+					return `<div class="chat-system-msg">${App.escapeHtml(msg.text)}</div>`;
+				}
+				const bubbleClass = msg.isMine ? 'chat-bubble-mine' : 'chat-bubble-peer';
+				const containerClass = msg.isMine ? 'chat-msg-mine' : 'chat-msg-peer';
+				const nameHtml = msg.isMine ? '' : `<div class="chat-bubble-name">${App.escapeHtml(msg.name)}</div>`;
+				const time = new Date(msg.timestamp);
+				const timeStr = `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+				const wrappedText = this._wrapText(msg.text, 30)
+					.replace(/&/g, '&amp;')
+					.replace(/</g, '&lt;')
+					.replace(/>/g, '&gt;')
+					.replace(/\n/g, '<br>');
+
+				return `
+				<div class="chat-msg ${containerClass}">
+					${nameHtml}
+					<div class="chat-bubble ${bubbleClass}">
+						<div class="chat-bubble-text">${wrappedText}</div>
+					</div>
+					<div class="chat-time">${timeStr}</div>
+				</div>`;
+			})
+			.join('');
+
+		// 最新メッセージにスクロール
+		container.scrollTop = container.scrollHeight;
+	},
+
+	/**
+	 * 吹き出しの1行あたりの文字数制限
+	 */
+	_wrapText(text, maxWidth) {
+		const lines = [];
+		for (const paragraph of text.split('\n')) {
+			let line = '';
+			let lineWidth = 0;
+			for (const char of paragraph) {
+				const charWidth = char.codePointAt(0) > 255 ? 2 : 1;
+				if (lineWidth + charWidth > maxWidth) {
+					lines.push(line);
+					line = char;
+					lineWidth = charWidth;
+				} else {
+					line += char;
+					lineWidth += charWidth;
+				}
+			}
+			lines.push(line);
+		}
+		return lines.join('\n');
+	},
+
+	/**
+	 * チャットの接続状態を更新
+	 */
+	_updateChatStatus(text) {
+		const el = document.getElementById('chatStatus');
+		if (el) el.textContent = text;
+	},
+
+	/**
+	 * メッセージを送信
+	 */
+	sendChatMessage() {
+		const input = document.getElementById('chatInput');
+		if (!input) return;
+
+		const text = input.value.trim();
+		if (!text) return;
+
+		const friendId = this._chatFriendId;
+		if (!friendId) return;
+
+		const friend = this.friends.find((f) => f.id === friendId);
+		if (!friend) return;
+
+		if (!this._chatWs || this._chatWs.readyState !== WebSocket.OPEN) {
+			App.showToast('チャットに接続されていません', 2);
+			return;
+		}
+
+		// 自分のメッセージをすぐに表示（楽観的UI）
+		this._addMessageToCache(friendId, {
+			name: friend.myName || '名無し',
+			text,
+			timestamp: Date.now(),
+			isMine: true,
+		});
+
+		// WebSocketで送信
+		this._chatWs.send(JSON.stringify({ type: 'message', text }));
+
+		input.value = '';
+		input.focus();
 	},
 
 	// === イベントバインド ===
@@ -410,14 +840,54 @@ const Friends = {
 
 		const closeModal = document.getElementById('closeShareModal');
 		if (closeModal) {
-			closeModal.addEventListener('click', () =>
-				document.getElementById('shareModal').classList.add('hidden'),
-			);
+			closeModal.addEventListener('click', () => {
+				this._stopCountdown();
+				document.getElementById('shareModal').classList.add('hidden');
+			});
 		}
 		const shareModal = document.getElementById('shareModal');
 		if (shareModal) {
 			shareModal.addEventListener('click', (e) => {
-				if (e.target === shareModal) shareModal.classList.add('hidden');
+				if (e.target === shareModal) {
+					this._stopCountdown();
+					shareModal.classList.add('hidden');
+				}
+			});
+		}
+
+		// === チャットイベント ===
+		const openChat = () => {
+			const friendId = this.currentFriendId;
+			if (friendId) this.openChat(friendId);
+		};
+		const chatBtn = document.getElementById('openChatBtn');
+		if (chatBtn) chatBtn.addEventListener('click', openChat);
+		const chatBtn2 = document.getElementById('openChatBtn2');
+		if (chatBtn2) chatBtn2.addEventListener('click', openChat);
+
+		const chatBackBtn = document.getElementById('chatBackBtn');
+		if (chatBackBtn) {
+			chatBackBtn.addEventListener('click', () => {
+				this.closeChat();
+				const friendId = this.currentFriendId;
+				if (friendId) {
+					document.getElementById('friendDetailView').classList.remove('hidden');
+				}
+			});
+		}
+
+		const chatSendBtn = document.getElementById('chatSendBtn');
+		if (chatSendBtn) {
+			chatSendBtn.addEventListener('click', () => this.sendChatMessage());
+		}
+
+		const chatInput = document.getElementById('chatInput');
+		if (chatInput) {
+			chatInput.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					this.sendChatMessage();
+				}
 			});
 		}
 	},

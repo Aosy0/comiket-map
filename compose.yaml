@@ -1,4 +1,23 @@
 services:
+  chatapp:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:22-alpine
+        WORKDIR /app
+        COPY package*.json ./
+        RUN npm ci --omit=dev
+        COPY ws-server.mjs .
+        EXPOSE 3001
+        CMD ["node", "ws-server.mjs"]
+    container_name: comiketmap-chat
+    restart: unless-stopped
+    environment:
+      WS_PORT: 3001
+      WS_ORIGIN: "http://localhost:80,https://cmap.aosy.f5.si"
+    networks:
+      - shared-network
+
   comiketmap:
     image: nginx:alpine
     container_name: comiketmap

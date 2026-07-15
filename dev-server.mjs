@@ -7,9 +7,9 @@
  * → http://localhost:3000
  */
 
+import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
-import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 
@@ -77,9 +77,10 @@ function proxyGeminiAPI(req, res) {
 // ---- 静的ファイル配信 ----
 const APP_DIR = new URL('app/', import.meta.url).pathname;
 // Windows対応: 先頭の / を除去したりドライブレター対応
-const APP_DIR_PATH = APP_DIR.startsWith('/') && process.platform === 'win32'
-	? APP_DIR.slice(1)  // /C:/... → C:/...
-	: APP_DIR;
+const APP_DIR_PATH =
+	APP_DIR.startsWith('/') && process.platform === 'win32'
+		? APP_DIR.slice(1) // /C:/... → C:/...
+		: APP_DIR;
 
 const MIME_TYPES = {
 	'.html': 'text/html',
@@ -128,17 +129,21 @@ function serveStatic(req, res) {
 }
 
 // ---- サーバー起動 ----
-const PORT = parseInt(process.env.PORT, 10) || 3000;
+const PORT = Number.parseInt(process.env.PORT, 10) || 3000;
 
-http.createServer((req, res) => {
-	if (req.method === 'POST' && req.url === '/api/gemini') {
-		proxyGeminiAPI(req, res);
-	} else {
-		serveStatic(req, res);
-	}
-}).listen(PORT, () => {
-	console.log(`\n  C108 サークルマップ - 開発サーバー`);
-	console.log(`  -----------------------------------------`);
-	console.log(`  -> http://localhost:${PORT}`);
-	console.log(`  -> AIチャット: ${GEMINI_API_KEY ? '利用可 (GEMINI_API_KEY 設定済み)' : '利用不可 (.env に GEMINI_API_KEY を設定してください)'}\n`);
-});
+http
+	.createServer((req, res) => {
+		if (req.method === 'POST' && req.url === '/api/gemini') {
+			proxyGeminiAPI(req, res);
+		} else {
+			serveStatic(req, res);
+		}
+	})
+	.listen(PORT, () => {
+		console.log('\n  C108 サークルマップ - 開発サーバー');
+		console.log('  -----------------------------------------');
+		console.log(`  -> http://localhost:${PORT}`);
+		console.log(
+			`  -> AIチャット: ${GEMINI_API_KEY ? '利用可 (GEMINI_API_KEY 設定済み)' : '利用不可 (.env に GEMINI_API_KEY を設定してください)'}\n`,
+		);
+	});
