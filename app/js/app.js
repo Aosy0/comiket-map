@@ -335,7 +335,6 @@ const App = {
 			if (!systemInstruction) {
         systemInstruction = await fetch('/system_instruction.txt').then(res => res.text());
 			}
-			
 			try{
 				const response = await fetch('/api/gemini', {
 						method: "POST",
@@ -378,60 +377,60 @@ const App = {
 		const promptSubmitButton = document.getElementById('aichat-submitbutton');
 		if(aichatForm && promptSubmitButton) {
 			promptSubmitButton.addEventListener('click', async () => {
-				const prompt = aichatForm.value;
-				aichatForm.value = "";
-				aichatForm.disabled = true;
-				const aichatBody = document.getElementById('aichat-body');
-				
-				if (aichatBody) {
-					// 折り返し処理 + HTMLエスケープ（XSS対策）
-					const wrappedPrompt = wrapText(prompt, 30)
-							.replace(/&/g, '&amp;')
-							.replace(/</g, '&lt;')
-							.replace(/>/g, '&gt;')
-							.replace(/\n/g, '<br>');
-					const promptHTML = `
-							<div class="aichat-speechbubble-user-container">
-									<div class="aichat-speechbubble-user">
-											${wrappedPrompt}
-									</div>
-							</div>`;
-					aichatBody.insertAdjacentHTML("beforeend", promptHTML);
-
-					const waitingForReplyHTML = `
-						<div id='waitingForReply' class="aichat-speechbubble-ai-container">
-								<div class="aichat-speechbubble-ai">
-										入力中...
+			const prompt = aichatForm.value;
+			aichatForm.value = "";
+			aichatForm.disabled = true;
+			const aichatBody = document.getElementById('aichat-body');
+			
+			if (aichatBody) {
+				// 折り返し処理 + HTMLエスケープ（XSS対策）
+				const wrappedPrompt = wrapText(prompt, 30)
+						.replace(/&/g, '&amp;')
+						.replace(/</g, '&lt;')
+						.replace(/>/g, '&gt;')
+						.replace(/\n/g, '<br>');
+				const promptHTML = `
+						<div class="aichat-speechbubble-user-container">
+								<div class="aichat-speechbubble-user">
+										${wrappedPrompt}
 								</div>
 						</div>`;
-					aichatBody.insertAdjacentHTML("beforeend", waitingForReplyHTML);
+				aichatBody.insertAdjacentHTML("beforeend", promptHTML);
 
-					const reply = await callGeminiAPI(prompt);
-					if(reply) {
-						if(document.getElementById('waitingForReply')) {
-							document.getElementById('waitingForReply').remove();
-						}
+				const waitingForReplyHTML = `
+					<div id='waitingForReply' class="aichat-speechbubble-ai-container">
+							<div class="aichat-speechbubble-ai">
+									入力中...
+							</div>
+					</div>`;
+				aichatBody.insertAdjacentHTML("beforeend", waitingForReplyHTML);
 
-						const wrappedReply = wrapText(reply, 30)
-								.replace(/&/g, '&amp;')
-								.replace(/</g, '&lt;')
-								.replace(/>/g, '&gt;')
-								.replace(/\n/g, '<br>');
-						const replyHTML = `
-							<div class="aichat-speechbubble-ai-container">
-									<div class="aichat-speechbubble-ai">
-											${wrappedReply}
-									</div>
-							</div>`;
-						aichatBody.insertAdjacentHTML("beforeend", replyHTML);
-					}
-
+				const reply = await callGeminiAPI(prompt);
+				if(reply) {
 					if(document.getElementById('waitingForReply')) {
 						document.getElementById('waitingForReply').remove();
 					}
 
-					aichatForm.disabled = false;
+					const wrappedReply = wrapText(reply, 30)
+							.replace(/&/g, '&amp;')
+							.replace(/</g, '&lt;')
+							.replace(/>/g, '&gt;')
+							.replace(/\n/g, '<br>');
+					const replyHTML = `
+						<div class="aichat-speechbubble-ai-container">
+								<div class="aichat-speechbubble-ai">
+										${wrappedReply}
+								</div>
+						</div>`;
+					aichatBody.insertAdjacentHTML("beforeend", replyHTML);
 				}
+
+				if(document.getElementById('waitingForReply')) {
+					document.getElementById('waitingForReply').remove();
+				}
+
+				aichatForm.disabled = false;
+			}
 			});
 		}
 	},
@@ -463,6 +462,12 @@ const App = {
 		// 設定タブに切り替えた場合、マップ管理リストを更新
 		if (tabId === 'settings') {
 			this.updateMapManagementList();
+		}
+
+		// タブ切り替え時にAIチャット画面を閉じる
+		if(document.getElementById('aichat')) {
+			document.getElementById('aichat').classList.remove('show');
+			document.body.classList.remove('aichat-open');
 		}
 	},
 
