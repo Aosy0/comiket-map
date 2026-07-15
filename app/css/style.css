@@ -1423,6 +1423,14 @@ input:checked + .toggle-slider:before {
 	overflow-y: auto;
 }
 
+.sync-info {
+	padding: 8px 0;
+}
+
+.sync-hint {
+	padding: 8px 0;
+}
+
 /* アニメーション - 最小限 */
 @keyframes fadeIn {
 	from {

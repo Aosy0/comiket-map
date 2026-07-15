@@ -14,7 +14,7 @@
     <title>C108 サークルマップ</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="./css/style.css?v=42" />
+    <link rel="stylesheet" href="./css/style.css?v=43" />
     <!-- PWA: iOS対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
@@ -546,7 +546,7 @@
           <h2>QRコードで共有</h2>
           <button class="modal-close" id="closeSyncQRModal">&times;</button>
         </div>
-        <div class="sync-modal-body">
+        <div class="modal-body">
           <p class="sync-info" id="syncInfo"></p>
           <div class="qr-container">
             <img id="qrImage" src="" alt="QRコード" class="qr-image" />
@@ -565,7 +565,7 @@
           <h2>URLで共有</h2>
           <button class="modal-close" id="closeSyncURLModal">&times;</button>
         </div>
-        <div class="sync-modal-body">
+        <div class="modal-body">
           <p class="sync-info" id="syncURLInfo"></p>
           <div class="code-container">
             <input type="text" id="shareURLText" readonly class="share-url" />
@@ -585,7 +585,7 @@
           <h2>コードで共有</h2>
           <button class="modal-close" id="closeSyncCodeModal">&times;</button>
         </div>
-        <div class="sync-modal-body">
+        <div class="modal-body">
           <p class="sync-info" id="syncCodeInfo"></p>
           <div class="code-container">
             <textarea id="shareCodeText" readonly class="share-code"></textarea>
@@ -605,7 +605,7 @@
           <h2>コードを読み込み</h2>
           <button class="modal-close" id="closeImportCodeModal">&times;</button>
         </div>
-        <div class="sync-modal-body">
+        <div class="modal-body">
           <p class="sync-info">共有コードまたはURLを入力してください</p>
           <div class="code-container">
             <textarea
