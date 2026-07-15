@@ -2,7 +2,7 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'C108map-v54';
+const CACHE_NAME = 'C108map-v55';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
@@ -12,7 +12,7 @@ const ASSETS_TO_CACHE = [
 	'/js/map.js?v=21',
 	'/js/sync.js?v=18',
 	'/js/jsQR.js?v=3',
-	'/js/friends.js?v=7',
+	'/js/friends.js?v=8',
 	'/js/pdf-handler.js?v=3',
 	'/system_instruction.txt',
 	'/manifest.json',

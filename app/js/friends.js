@@ -5,7 +5,11 @@
 const Friends = {
 	STORAGE_KEY: 'C108_friends',
 	QR_EXPIRY_MS: 5 * 60 * 1000,
-	WS_URL: typeof CONFIG !== 'undefined' && CONFIG.CHAT_WS_URL ? CONFIG.CHAT_WS_URL : `ws://${location.hostname}:3001`,
+	WS_URL: (() => {
+		if (typeof CONFIG !== 'undefined' && CONFIG.CHAT_WS_URL) return CONFIG.CHAT_WS_URL;
+		if (location.hostname === 'cmap.aosy.f5.si') return `wss://${location.hostname}/ws`;
+		return `ws://${location.hostname}:3001`;
+	})(),
 
 	friends: [],
 	_scanning: false,
