@@ -577,6 +577,9 @@ const App = {
 
 		return `
             <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
+								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
+									<span class="visually-hidden">New alerts</span>
+								</span>
                 <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
                 <div class="circle-header">
                     <span class="circle-name">${this.escapeHtml(circle.name)}</span>
