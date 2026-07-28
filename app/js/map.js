@@ -775,8 +775,14 @@ const MapViewer = {
 		const toast = document.getElementById('toast');
 		if (toast) {
 			toast.textContent = msg;
-			toast.classList.remove('hidden');
-			setTimeout(() => toast.classList.add('hidden'), duration);
+			toast.classList.remove('hidden', 'hiding');
+			toast.classList.add('show');
+			setTimeout(() => {
+				toast.classList.add('hiding');
+				setTimeout(() => {
+					toast.classList.remove('show', 'hiding');
+				}, 300);
+			}, duration);
 		}
 	},
 

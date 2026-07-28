@@ -980,22 +980,35 @@ const App = {
 					<use href="#${icon}" />
 				</svg>
 				<strong class="me-auto" style="color: ${color}">${status}</strong>
-				<div></div>
-				<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+				<button type="button" class="btn-close" aria-label="Close"></button>
 			</div>
-			<div id="toast-body" class="toast-body" style="display: grid, grid-template-columns: 9fr 1fr">
+			<div id="toast-body" class="toast-body">
 				${message}
 			</div>`;
 		toast.insertAdjacentHTML('afterbegin', toastHtml);
 
-		try {
-			const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
-			toastBootstrap.show();
-		} catch (e) {
-			console.warn('showToast fallback (bootstrap unavailable):', message);
-			toast.style.display = 'block';
-			setTimeout(() => { toast.style.display = ''; }, index === 2 ? 5000 : 3000);
+		// Show toast with custom animation
+		toast.classList.remove('hidden');
+		toast.classList.add('show');
+
+		const closeBtn = toast.querySelector('.btn-close');
+		if (closeBtn) {
+			closeBtn.addEventListener('click', () => this.hideToast(toast));
 		}
+
+		const delay = index === 2 ? 5000 : 3000;
+		setTimeout(() => this.hideToast(toast), delay);
+	},
+
+	/**
+	 * トーストを隠す
+	 */
+	hideToast(toast) {
+		if (!toast) return;
+		toast.classList.add('hiding');
+		setTimeout(() => {
+			toast.classList.remove('show', 'hiding', 'hidden');
+		}, 300);
 	},
 
 	/**
