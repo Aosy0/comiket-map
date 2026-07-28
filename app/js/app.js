@@ -988,6 +988,7 @@ const App = {
 		toast.insertAdjacentHTML('afterbegin', toastHtml);
 
 		// Show toast with custom animation
+		toast.classList.remove('hidden');
 		toast.classList.add('show');
 
 		const closeBtn = toast.querySelector('.btn-close');
@@ -1006,7 +1007,7 @@ const App = {
 		if (!toast) return;
 		toast.classList.add('hiding');
 		setTimeout(() => {
-			toast.classList.remove('show', 'hiding');
+			toast.classList.remove('show', 'hiding', 'hidden');
 		}, 300);
 	},
 
