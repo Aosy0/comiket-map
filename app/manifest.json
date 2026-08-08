@@ -1,7 +1,7 @@
 {
-	"name": "C108 サークルマップ",
-	"short_name": "C108Map",
-	"description": "コミックマーケット107 サークルマップ - オフライン対応",
+	"name": "サークルマップ",
+	"short_name": "CircleMap",
+	"description": "サークルマップ - オフライン対応",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#f5f5f5",

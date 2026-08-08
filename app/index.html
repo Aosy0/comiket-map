@@ -9,18 +9,18 @@
     <meta name="theme-color" content="#1a73e8" />
     <meta
       name="description"
-      content="コミックマーケット108 サークルマップ"
+      content="サークルマップ - オフライン対応"
     />
-    <title>C108 サークルマップ</title>
+    <title>サークルマップ</title>
     <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./css/style.css?v=45" />
+    <link rel="stylesheet" href="./css/style.css?v=46" />
     <!-- PWA: iOS対応 -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="C108Map" />
+    <meta name="apple-mobile-web-app-title" content="CircleMap" />
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   </head>
 
@@ -139,7 +139,10 @@
     <div id="app">
       <!-- ヘッダー -->
       <header>
-        <h1>C108 サークルマップ</h1>
+        <h1>サークルマップ</h1>
+        <select id="eventSelect" class="event-select" aria-label="開催回を選択">
+          <!-- オプションはJSで動的に生成 -->
+        </select>
         <div class="header-status" id="onlineStatus"></div>
       </header>
 
@@ -403,6 +406,25 @@
         <!-- 設定タブ -->
         <section id="tab-settings" class="tab-content">
           <div class="settings-section">
+            <h2>開催回の管理</h2>
+            <p class="sync-description">
+              サークル・設定・友達・マップは開催回ごとに分離して保存されます
+            </p>
+            <div class="event-management-list" id="eventManagementList">
+              <!-- JSで動的に生成 -->
+            </div>
+            <div class="event-add-row">
+              <input
+                type="number"
+                id="eventAddInput"
+                placeholder="開催回を追加（例: 109）"
+                min="100"
+                inputmode="numeric"
+              />
+              <button class="settings-btn" id="eventAddBtn">追加</button>
+            </div>
+          </div>
+          <div class="settings-section">
             <h2>データ管理</h2>
             <div class="settings-buttons">
               <button class="settings-btn" id="exportData">
@@ -499,7 +521,7 @@
           </div>
           <div class="settings-section">
             <h2>アプリ情報</h2>
-            <p class="app-info">C108 サークルマップ v0.7.1</p>
+            <p class="app-info">サークルマップ v0.7.1</p>
             <p class="app-info">オフライン対応PWAアプリ</p>
             <p class="app-info" id="cacheStatus">キャッシュ状態: 確認中...</p>
             <button class="settings-btn" id="forceUpdate">
@@ -802,12 +824,12 @@
     <!-- PDF.js for PDF rendering (legacy build for better compatibility) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="./js/pdf-handler.js?v=3"></script>
-    <script src="./js/storage.js?v=20"></script>
-    <script src="./js/map.js?v=22"></script>
+    <script src="./js/storage.js?v=23"></script>
+    <script src="./js/map.js?v=23"></script>
     <script src="./js/sync.js?v=18"></script>
 <script src="./js/jsQR.js?v=3"></script>
-<script src="./js/friends.js?v=8"></script>
+<script src="./js/friends.js?v=9"></script>
     <script src="js/toast-info.js"></script>
-    <script src="./js/app.js?v=39"></script>
+    <script src="./js/app.js?v=40"></script>
   </body>
 </html>

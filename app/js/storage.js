@@ -4,21 +4,193 @@
 
 const Storage = {
 	KEYS: {
-		CIRCLES: 'C108_circles',
-		SETTINGS: 'C108_settings',
+		// グローバル設定キー
+		EVENTS: 'app_events',
+		CURRENT_EVENT: 'app_current_event',
+		MIGRATED: 'app_migrated_v2',
+		// 旧バージョン（C108固定）のキー - マイグレーション用
+		LEGACY_CIRCLES: 'C108_circles',
+		LEGACY_SETTINGS: 'C108_settings',
+		LEGACY_FRIENDS: 'C108_friends',
+	},
+
+	// デフォルトの開催回一覧
+	DEFAULT_EVENTS: ['107', '108'],
+	// 旧データの移行先開催回
+	LEGACY_EVENT_ID: '107',
+	// 旧IndexedDB名
+	LEGACY_MAPS_DB: 'C108_maps',
+
+	/**
+	 * 開催回一覧を取得（未設定ならデフォルト）
+	 */
+	getEvents() {
+		try {
+			const data = localStorage.getItem(this.KEYS.EVENTS);
+			if (data) {
+				const events = JSON.parse(data);
+				if (Array.isArray(events) && events.length > 0) {
+					return events;
+				}
+			}
+		} catch (e) {
+			console.error('Failed to get events:', e);
+		}
+		return [...this.DEFAULT_EVENTS];
+	},
+
+	/**
+	 * 開催回一覧を保存
+	 */
+	saveEvents(events) {
+		try {
+			localStorage.setItem(this.KEYS.EVENTS, JSON.stringify(events));
+			return true;
+		} catch (e) {
+			console.error('Failed to save events:', e);
+			return false;
+		}
+	},
+
+	/**
+	 * 現在選択中の開催回を取得（未設定なら最新の開催回）
+	 */
+	getCurrentEvent() {
+		const stored = localStorage.getItem(this.KEYS.CURRENT_EVENT);
+		if (stored) return stored;
+		const events = this.getEvents();
+		return events[events.length - 1];
+	},
+
+	/**
+	 * 現在選択中の開催回を設定
+	 */
+	setCurrentEvent(eventId) {
+		localStorage.setItem(this.KEYS.CURRENT_EVENT, eventId);
+	},
+
+	/**
+	 * 開催回の表示ラベル（例: "107" -> "C107"）
+	 */
+	getEventLabel(eventId) {
+		return `C${eventId}`;
+	},
+
+	/**
+	 * 現在イベント用のサークル保存キー
+	 */
+	getCirclesKey() {
+		return `circles_${this.getCurrentEvent()}`;
+	},
+
+	/**
+	 * 現在イベント用の設定保存キー
+	 */
+	getSettingsKey() {
+		return `settings_${this.getCurrentEvent()}`;
+	},
+
+	/**
+	 * 現在イベント用の友達保存キー
+	 */
+	getFriendsKey() {
+		return `friends_${this.getCurrentEvent()}`;
+	},
+
+	/**
+	 * 旧データ（C108固定キー）をC107のキーへ移行（初回起動時のみ）
+	 * @returns {boolean} 旧データが存在し移行を実行した場合は true
+	 */
+	migrateLegacyData() {
+		if (localStorage.getItem(this.KEYS.MIGRATED)) return false;
+
+		let migrated = false;
+		const legacyPairs = [
+			[this.KEYS.LEGACY_CIRCLES, `circles_${this.LEGACY_EVENT_ID}`],
+			[this.KEYS.LEGACY_SETTINGS, `settings_${this.LEGACY_EVENT_ID}`],
+			[this.KEYS.LEGACY_FRIENDS, `friends_${this.LEGACY_EVENT_ID}`],
+		];
+		for (const [legacyKey, newKey] of legacyPairs) {
+			const legacyData = localStorage.getItem(legacyKey);
+			if (legacyData === null) continue;
+			// 移行先にデータが無い場合のみコピー
+			if (localStorage.getItem(newKey) === null) {
+				localStorage.setItem(newKey, legacyData);
+			}
+			localStorage.removeItem(legacyKey);
+			migrated = true;
+		}
+
+		localStorage.setItem(this.KEYS.MIGRATED, 'true');
+		return migrated;
+	},
+
+	/**
+	 * 旧IndexedDB（C108_maps）をC107用DB（maps_107）へコピーして削除
+	 * 非同期で実行する（fire-and-forget）
+	 */
+	async migrateLegacyMapsAsync() {
+		try {
+			if (!('indexedDB' in window)) return;
+
+			// 旧DBの存在確認
+			let dbNames = [];
+			try {
+				const dbs = await indexedDB.databases();
+				dbNames = dbs.map((d) => d.name);
+			} catch (e) {
+				return;
+			}
+			if (!dbNames.includes(this.LEGACY_MAPS_DB)) return;
+
+			const targetName = `maps_${this.LEGACY_EVENT_ID}`;
+			const srcDb = await this.MapData.openDB(this.LEGACY_MAPS_DB);
+			const dstDb = await this.MapData.openDB(targetName);
+			try {
+				// 全エントリをコピー
+				const keys = await this.MapData.getAllKeys(srcDb);
+				for (const key of keys) {
+					const value = await this.MapData.getByKey(srcDb, key);
+					await this.MapData.putByKey(dstDb, key, value);
+				}
+			} finally {
+				srcDb.close();
+				dstDb.close();
+			}
+
+			// 旧DBを削除
+			await new Promise((resolve, reject) => {
+				const req = indexedDB.deleteDatabase(this.LEGACY_MAPS_DB);
+				req.onsuccess = () => resolve();
+				req.onerror = () => reject(req.error);
+				req.onblocked = () => resolve();
+			});
+			console.log('IndexedDBの旧データをC107へ移行しました');
+		} catch (e) {
+			console.error('Failed to migrate legacy maps:', e);
+		}
 	},
 
 	/**
 	 * IndexedDB - マップ画像保存用
 	 */
 	MapData: {
-		DB_NAME: 'C108_maps',
 		DB_VERSION: 1,
 		STORE_NAME: 'images',
 
-		async open() {
+		/**
+		 * 現在イベント用のDB名
+		 */
+		getDBName() {
+			return `maps_${Storage.getCurrentEvent()}`;
+		},
+
+		/**
+		 * 指定DB名で開く（マイグレーション用にも使用）
+		 */
+		async openDB(dbName) {
 			return new Promise((resolve, reject) => {
-				const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+				const req = indexedDB.open(dbName, this.DB_VERSION);
 				req.onupgradeneeded = (e) => {
 					const db = e.target.result;
 					if (!db.objectStoreNames.contains(this.STORE_NAME)) {
@@ -26,6 +198,46 @@ const Storage = {
 					}
 				};
 				req.onsuccess = (e) => resolve(e.target.result);
+				req.onerror = (e) => reject(e);
+			});
+		},
+
+		async open() {
+			return this.openDB(this.getDBName());
+		},
+
+		/**
+		 * 指定DBの全キーを取得（マイグレーション用）
+		 */
+		getAllKeys(db) {
+			return new Promise((resolve, reject) => {
+				const tx = db.transaction(this.STORE_NAME, 'readonly');
+				const req = tx.objectStore(this.STORE_NAME).getAllKeys();
+				req.onsuccess = () => resolve(req.result);
+				req.onerror = (e) => reject(e);
+			});
+		},
+
+		/**
+		 * 指定DBからキーで取得（マイグレーション用）
+		 */
+		getByKey(db, key) {
+			return new Promise((resolve, reject) => {
+				const tx = db.transaction(this.STORE_NAME, 'readonly');
+				const req = tx.objectStore(this.STORE_NAME).get(key);
+				req.onsuccess = () => resolve(req.result);
+				req.onerror = (e) => reject(e);
+			});
+		},
+
+		/**
+		 * 指定DBへキーで保存（マイグレーション用）
+		 */
+		putByKey(db, key, value) {
+			return new Promise((resolve, reject) => {
+				const tx = db.transaction(this.STORE_NAME, 'readwrite');
+				const req = tx.objectStore(this.STORE_NAME).put(value, key);
+				req.onsuccess = () => resolve();
 				req.onerror = (e) => reject(e);
 			});
 		},
@@ -147,7 +359,7 @@ const Storage = {
 	 */
 	getCircles() {
 		try {
-			const data = localStorage.getItem(this.KEYS.CIRCLES);
+			const data = localStorage.getItem(this.getCirclesKey());
 			return data ? JSON.parse(data) : [];
 		} catch (e) {
 			console.error('Failed to get circles:', e);
@@ -160,7 +372,7 @@ const Storage = {
 	 */
 	saveCircles(circles) {
 		try {
-			localStorage.setItem(this.KEYS.CIRCLES, JSON.stringify(circles));
+			localStorage.setItem(this.getCirclesKey(), JSON.stringify(circles));
 			return true;
 		} catch (e) {
 			console.error('Failed to save circles:', e);
@@ -293,7 +505,7 @@ const Storage = {
 	 */
 	getSettings() {
 		try {
-			const data = localStorage.getItem(this.KEYS.SETTINGS);
+			const data = localStorage.getItem(this.getSettingsKey());
 			return data ? JSON.parse(data) : {};
 		} catch (e) {
 			console.error('Failed to get settings:', e);
@@ -308,7 +520,7 @@ const Storage = {
 		try {
 			const current = this.getSettings();
 			const merged = { ...current, ...settings };
-			localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(merged));
+			localStorage.setItem(this.getSettingsKey(), JSON.stringify(merged));
 			return true;
 		} catch (e) {
 			console.error('Failed to save settings:', e);
@@ -317,10 +529,11 @@ const Storage = {
 	},
 
 	/**
-	 * 全データを削除
+	 * 全データを削除（現在イベントのサークル・設定・友達）
 	 */
 	clearAll() {
-		localStorage.removeItem(this.KEYS.CIRCLES);
-		localStorage.removeItem(this.KEYS.SETTINGS);
+		localStorage.removeItem(this.getCirclesKey());
+		localStorage.removeItem(this.getSettingsKey());
+		localStorage.removeItem(this.getFriendsKey());
 	},
 };

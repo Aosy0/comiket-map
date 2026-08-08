@@ -1,5 +1,5 @@
 /**
- * C108 サークルマップ - メインアプリケーション
+ * サークルマップ - メインアプリケーション
  */
 
 const App = {
@@ -18,13 +18,26 @@ const App = {
 	 * 初期化
 	 */
 	init() {
-		console.log('C108 サークルマップ - 初期化開始');
+		console.log('サークルマップ - 初期化開始');
+
+		// 旧データ（C108固定キー）をC107へ移行（初回起動時のみ・circle読み込みより前）
+		const migrated = Storage.migrateLegacyData();
+		if (migrated) {
+			// 既存ユーザーは移行先のC107を表示
+			Storage.setCurrentEvent(Storage.LEGACY_EVENT_ID);
+			// IndexedDBのマップデータ移行は非同期で実行
+			Storage.migrateLegacyMapsAsync();
+		}
+
+		// 開催回セレクターを初期化
+		this.initEventSelect();
 
 		// 設定を読み込み
 		this.loadSettings();
 
 		this.bindEvents();
 		this.renderCircleList();
+		this.renderEventManagement();
 		this.updateOnlineStatus();
 		this.registerServiceWorker();
 		this.checkCacheStatus();
@@ -38,7 +51,7 @@ const App = {
 		// URLハッシュからのデータ読み込み
 		this.loadFromURLHash();
 
-		console.log('C108 サークルマップ - 初期化完了');
+		console.log('サークルマップ - 初期化完了');
 	},
 
 	/**
@@ -108,6 +121,21 @@ const App = {
 		document.querySelectorAll('.tab-btn').forEach((btn) => {
 			btn.addEventListener('click', (e) => this.switchTab(e.target.closest('.tab-btn').dataset.tab));
 		});
+
+		// 開催回の追加
+		const eventAddBtn = document.getElementById('eventAddBtn');
+		if (eventAddBtn) {
+			eventAddBtn.addEventListener('click', () => this.addEvent());
+		}
+		const eventAddInput = document.getElementById('eventAddInput');
+		if (eventAddInput) {
+			eventAddInput.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					this.addEvent();
+				}
+			});
+		}
 
 		// 日付フィルター
 		document.querySelectorAll('.filter-btn').forEach((btn) => {
@@ -459,6 +487,7 @@ const App = {
 		// 設定タブに切り替えた場合、マップ管理リストを更新
 		if (tabId === 'settings') {
 			this.updateMapManagementList();
+			this.renderEventManagement();
 		}
 
 		// タブ切り替え時にAIチャット画面を閉じる
@@ -466,6 +495,123 @@ const App = {
 			document.getElementById('aichat').classList.remove('show');
 			document.body.classList.remove('aichat-open');
 		}
+	},
+
+	/**
+	 * 開催回セレクターの初期化
+	 */
+	initEventSelect() {
+		const select = document.getElementById('eventSelect');
+		if (!select) return;
+		this.updateEventSelectOptions();
+		select.addEventListener('change', (e) => this.switchEvent(e.target.value));
+	},
+
+	/**
+	 * 開催回セレクターのオプションを更新
+	 */
+	updateEventSelectOptions() {
+		const select = document.getElementById('eventSelect');
+		if (!select) return;
+		const events = Storage.getEvents();
+		const current = Storage.getCurrentEvent();
+		select.innerHTML = '';
+		for (const eventId of events) {
+			const option = document.createElement('option');
+			option.value = eventId;
+			option.textContent = Storage.getEventLabel(eventId);
+			if (eventId === current) option.selected = true;
+			select.appendChild(option);
+		}
+	},
+
+	/**
+	 * 開催回を切り替えて各データを再読み込み
+	 */
+	switchEvent(eventId) {
+		if (eventId === Storage.getCurrentEvent()) return;
+		Storage.setCurrentEvent(eventId);
+
+		// 設定を再読み込み
+		this.loadSettings();
+		const compactToggleBtn = document.getElementById('compactToggleBtn');
+		if (compactToggleBtn) compactToggleBtn.checked = this.compactMode;
+
+		// サークル一覧を再描画
+		this.renderCircleList();
+
+		// 友達リストを再読み込み
+		if (typeof Friends !== 'undefined') {
+			Friends.load();
+			Friends.showFriendsList();
+		}
+
+		// マップを再読み込み（カスタムマップはイベント別DB）
+		if (typeof MapViewer !== 'undefined') {
+			MapViewer.loadMap(MapViewer.currentMapKey);
+		}
+
+		// 設定タブの表示を更新
+		this.renderEventManagement();
+		this.updateMapManagementList();
+
+		this.showToast(`${Storage.getEventLabel(eventId)}に切り替えました`, 0);
+	},
+
+	/**
+	 * 設定タブの「開催回の管理」リストを描画
+	 */
+	renderEventManagement() {
+		const container = document.getElementById('eventManagementList');
+		if (!container) return;
+
+		const events = Storage.getEvents();
+		const current = Storage.getCurrentEvent();
+		container.innerHTML = '';
+
+		for (const eventId of events) {
+			const row = document.createElement('div');
+			row.className = `event-management-item${eventId === current ? ' current' : ''}`;
+
+			const label = document.createElement('span');
+			label.className = 'event-label';
+			label.textContent = Storage.getEventLabel(eventId);
+			row.appendChild(label);
+
+			if (eventId === current) {
+				const badge = document.createElement('span');
+				badge.className = 'event-current-badge';
+				badge.textContent = '選択中';
+				row.appendChild(badge);
+			}
+
+			row.addEventListener('click', () => this.switchEvent(eventId));
+			container.appendChild(row);
+		}
+	},
+
+	/**
+	 * 新しい開催回を追加
+	 */
+	addEvent() {
+		const input = document.getElementById('eventAddInput');
+		if (!input) return;
+
+		const value = input.value.trim();
+		if (!value) return;
+
+		const events = Storage.getEvents();
+		if (events.includes(value)) {
+			this.showToast(`${Storage.getEventLabel(value)}は既に登録されています`, 2);
+			return;
+		}
+
+		events.push(value);
+		Storage.saveEvents(events);
+		this.updateEventSelectOptions();
+		this.renderEventManagement();
+		input.value = '';
+		this.showToast(`${Storage.getEventLabel(value)}を追加しました`, 0);
 	},
 
 	/**
@@ -843,7 +989,7 @@ const App = {
 
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `C108_circles_${new Date().toISOString().slice(0, 10)}.json`;
+		a.download = `circles_${Storage.getCurrentEvent()}_${new Date().toISOString().slice(0, 10)}.json`;
 		a.click();
 
 		URL.revokeObjectURL(url);
@@ -1276,9 +1422,9 @@ const App = {
 		if (!confirm('すべてのカスタムマップデータを削除しますか？\nこの操作は取り消せません。')) return;
 
 		try {
-			// IndexedDBのマップデータベースを完全に削除
+			// IndexedDBのマップデータベースを完全に削除（現在イベントのDB）
 			await new Promise((resolve, reject) => {
-				const request = indexedDB.deleteDatabase('C108_maps');
+				const request = indexedDB.deleteDatabase(Storage.MapData.getDBName());
 				request.onsuccess = () => resolve();
 				request.onerror = () => reject(request.error);
 				request.onblocked = () => {

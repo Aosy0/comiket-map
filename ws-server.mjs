@@ -297,7 +297,7 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 server.listen(PORT, () => {
-	console.log('\n  C108 チャットサーバー');
+	console.log('\n  サークルマップ チャットサーバー');
 	console.log('  -----------------------------------------');
 	console.log(`  -> ws://localhost:${PORT}`);
 	console.log(`  -> 許可オリジン: ${ALLOWED_ORIGINS.join(', ')}`);

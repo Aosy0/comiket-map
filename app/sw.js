@@ -2,17 +2,17 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'C108map-v58';
+const CACHE_NAME = 'circlemap-v60';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
-	'/css/style.css?v=45',
-	'/js/app.js?v=39',
-	'/js/storage.js?v=22',
-	'/js/map.js?v=22',
+	'/css/style.css?v=46',
+	'/js/app.js?v=40',
+	'/js/storage.js?v=23',
+	'/js/map.js?v=23',
 	'/js/sync.js?v=18',
 	'/js/jsQR.js?v=3',
-	'/js/friends.js?v=8',
+	'/js/friends.js?v=9',
 	'/js/pdf-handler.js?v=3',
 	'/system_instruction.txt',
 	'/manifest.json',

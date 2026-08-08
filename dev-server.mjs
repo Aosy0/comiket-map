@@ -140,7 +140,7 @@ http
 		}
 	})
 	.listen(PORT, () => {
-		console.log('\n  C108 サークルマップ - 開発サーバー');
+		console.log('\n  サークルマップ - 開発サーバー');
 		console.log('  -----------------------------------------');
 		console.log(`  -> http://localhost:${PORT}`);
 		console.log(

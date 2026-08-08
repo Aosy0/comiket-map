@@ -670,10 +670,10 @@ const MapViewer = {
 			this.setImage(defaultSrc);
 
 			// 初回表示時の案内
-			if (!localStorage.getItem('C108_usage_guide_shown')) {
+			if (!localStorage.getItem('usage_guide_shown')) {
 				setTimeout(() => {
 					this.showToast('ℹ️ 公式マップを利用するには⚙️ボタンから設定してください', 5000);
-					localStorage.setItem('C108_usage_guide_shown', 'true');
+					localStorage.setItem('usage_guide_shown', 'true');
 				}, 1000);
 			}
 		}
