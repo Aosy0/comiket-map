@@ -1,5 +1,5 @@
 /* ===========================================
-   C108 サークルマップ - シンプル・軽量デザイン
+   サークルマップ - シンプル・軽量デザイン
    バッテリー節約・通信量削減を優先
    v1.1.1 - Material Icons (SVG) 対応
    =========================================== */
@@ -113,6 +113,75 @@ header h1 {
 	font-size: 1rem;
 	font-weight: 600;
 	text-align: center;
+}
+
+/* ヘッダーの開催回セレクター */
+.event-select {
+	display: block;
+	margin: 6px auto 0;
+	padding: 4px 8px;
+	font-size: 0.85rem;
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.4);
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.15);
+	text-align: center;
+	text-align-last: center;
+}
+
+.event-select option {
+	color: #202124;
+	background: #fff;
+}
+
+/* 設定タブ - 開催回の管理 */
+.event-management-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.event-management-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 14px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--card);
+	cursor: pointer;
+}
+
+.event-management-item.current {
+	border-color: var(--primary);
+	background: rgba(26, 115, 232, 0.08);
+}
+
+.event-label {
+	font-weight: 600;
+}
+
+.event-current-badge {
+	font-size: 0.75rem;
+	color: #fff;
+	background: var(--primary);
+	padding: 2px 8px;
+	border-radius: 999px;
+}
+
+.event-add-row {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.event-add-row input {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 12px;
+	font-size: 1rem;
+	border: 1px solid var(--border);
+	border-radius: 6px;
 }
 
 .header-status {

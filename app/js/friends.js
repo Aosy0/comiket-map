@@ -3,7 +3,12 @@
  * QRコード共有・スキャン、友達一覧・詳細表示、チャット
  */
 const Friends = {
-	STORAGE_KEY: 'C108_friends',
+	/**
+	 * 現在イベント用の友達保存キー（イベント別に分離）
+	 */
+	get STORAGE_KEY() {
+		return `friends_${Storage.getCurrentEvent()}`;
+	},
 	QR_EXPIRY_MS: 5 * 60 * 1000,
 	WS_URL: (() => {
 		if (typeof CONFIG !== 'undefined' && CONFIG.CHAT_WS_URL) return CONFIG.CHAT_WS_URL;
