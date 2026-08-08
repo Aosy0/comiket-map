@@ -16,6 +16,8 @@ const Storage = {
 
 	// デフォルトの開催回一覧
 	DEFAULT_EVENTS: ['107', '108'],
+	// 次回開催回（最新） - これより後の開催回は選択・追加できない
+	LATEST_EVENT: '108',
 	// 旧データの移行先開催回
 	LEGACY_EVENT_ID: '107',
 	// 旧IndexedDB名
@@ -23,6 +25,7 @@ const Storage = {
 
 	/**
 	 * 開催回一覧を取得（未設定ならデフォルト）
+	 * 新しい開催回が先頭（降順）。次回開催回より後の開催回は除外
 	 */
 	getEvents() {
 		try {
@@ -30,13 +33,15 @@ const Storage = {
 			if (data) {
 				const events = JSON.parse(data);
 				if (Array.isArray(events) && events.length > 0) {
-					return events;
+					return events
+						.filter((id) => Number(id) <= Number(this.LATEST_EVENT))
+						.sort((a, b) => Number(b) - Number(a));
 				}
 			}
 		} catch (e) {
 			console.error('Failed to get events:', e);
 		}
-		return [...this.DEFAULT_EVENTS];
+		return [...this.DEFAULT_EVENTS].sort((a, b) => Number(b) - Number(a));
 	},
 
 	/**
@@ -53,13 +58,13 @@ const Storage = {
 	},
 
 	/**
-	 * 現在選択中の開催回を取得（未設定なら最新の開催回）
+	 * 現在選択中の開催回を取得（未設定または無効なら最新の開催回）
 	 */
 	getCurrentEvent() {
 		const stored = localStorage.getItem(this.KEYS.CURRENT_EVENT);
-		if (stored) return stored;
 		const events = this.getEvents();
-		return events[events.length - 1];
+		if (stored && events.includes(stored)) return stored;
+		return events[0];
 	},
 
 	/**

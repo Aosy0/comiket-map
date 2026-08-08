@@ -600,6 +600,12 @@ const App = {
 		const value = input.value.trim();
 		if (!value) return;
 
+		// 次回開催回より後の開催回は追加できない
+		if (Number(value) > Number(Storage.LATEST_EVENT)) {
+			this.showToast(`${Storage.getEventLabel(value)}は追加できません（${Storage.getEventLabel(Storage.LATEST_EVENT)}が最新です）`, 2);
+			return;
+		}
+
 		const events = Storage.getEvents();
 		if (events.includes(value)) {
 			this.showToast(`${Storage.getEventLabel(value)}は既に登録されています`, 2);
