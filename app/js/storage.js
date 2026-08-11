@@ -282,7 +282,7 @@ const Storage = {
 
 		/**
 		 * ページ番号付きで画像を保存
-		 * @param {string} areaKey - エリアキー (e456, e78, w, s)
+		 * @param {string} areaKey - エリアキー (east123, east7, west12, south12)
 		 * @param {number} pageNum - ページ番号 (1始まり)
 		 * @param {Blob} file - 画像データ
 		 */

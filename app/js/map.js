@@ -19,14 +19,15 @@ const MapViewer = {
 
 	// マップ画像パス
 	maps: {
-		e456: '/maps/map_east456.svg',
-		e78: '/maps/map_east78.svg',
-		w: '/maps/map_west.svg',
-		s: '/maps/map_south.svg',
+		east123: '/maps/map_east123.svg',
+		east7: '/maps/map_east7.svg',
+		west12: '/maps/map_west12.svg',
+		south12: '/maps/map_south12.svg',
+		overview: '/maps/map_overview.svg',
 	},
 
 	// 現在表示中のマップキー
-	currentMapKey: 'e456',
+	currentMapKey: 'east123',
 
 	// ページ関連プロパティ
 	currentPage: 1,
@@ -43,7 +44,7 @@ const MapViewer = {
 
 		this.bindEvents();
 		this.initModalEvents();
-		this.loadMap('e456');
+		this.loadMap('east123');
 	},
 
 	/**
@@ -175,10 +176,10 @@ const MapViewer = {
 
 	// 公式PDF用のエリアマッピング（ページ番号 -> エリアキー）
 	officialPDFMapping: {
-		1: { key: 'e456', name: '東4-6ホール' },
-		2: { key: 'e78', name: '東7-8ホール' },
-		3: { key: 's', name: '南1-4ホール' },
-		4: { key: 'w', name: '西1-4ホール' },
+		1: { key: 'east123', name: '東1-3ホール' },
+		2: { key: 'east7', name: '東7ホール' },
+		3: { key: 'west12', name: '西1-2ホール' },
+		4: { key: 'south12', name: '南1-2ホール' },
 	},
 
 	/**
@@ -308,10 +309,10 @@ const MapViewer = {
 
 		// 利用可能なエリアオプション
 		const areaOptions = [
-			{ key: 'e456', name: '東4-6ホール' },
-			{ key: 'e78', name: '東7-8ホール' },
-			{ key: 's', name: '南1-4ホール' },
-			{ key: 'w', name: '西1-4ホール' },
+			{ key: 'east123', name: '東1-3ホール' },
+			{ key: 'east7', name: '東7ホール' },
+			{ key: 'west12', name: '西1-2ホール' },
+			{ key: 'south12', name: '南1-2ホール' },
 			{ key: '', name: '（スキップ）' },
 		];
 

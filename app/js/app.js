@@ -99,9 +99,16 @@ const App = {
 
 	/**
 	 * Service Worker登録
+	 * 開発環境（localhost / 127.0.0.1）ではキャッシュ問題を避けるため登録しない。
 	 */
 	registerServiceWorker() {
 		if ('serviceWorker' in navigator) {
+			const isDev =
+				location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+			if (isDev) {
+				console.log('[SW] 開発環境のためService Workerをスキップ');
+				return;
+			}
 			navigator.serviceWorker
 				.register('/sw.js')
 				.then((reg) => {
@@ -1338,10 +1345,10 @@ const App = {
 		if (!container) return;
 
 		const areas = [
-			{ key: 'e456', name: '東4-6ホール' },
-			{ key: 'e78', name: '東7-8ホール' },
-			{ key: 'w', name: '西1-4ホール' },
-			{ key: 's', name: '南1-4ホール' },
+			{ key: 'east123', name: '東1-3ホール' },
+			{ key: 'east7', name: '東7ホール' },
+			{ key: 'west12', name: '西1-2ホール' },
+			{ key: 'south12', name: '南1-2ホール' },
 		];
 
 		container.innerHTML = '';

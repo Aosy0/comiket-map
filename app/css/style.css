@@ -611,7 +611,9 @@ main {
 
 .map-image {
 	position: absolute;
-	transform-origin: center center;
+	left: 50%;
+	top: 50%;
+	transform-origin: 0 0;
 	will-change: transform;
 	max-width: none;
 	max-height: none;

@@ -2,14 +2,14 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'circlemap-v61';
+const CACHE_NAME = 'circlemap-v64';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
-	'/css/style.css?v=46',
-	'/js/app.js?v=41',
+	'/css/style.css?v=47',
+	'/js/app.js?v=43',
 	'/js/storage.js?v=24',
-	'/js/map.js?v=23',
+	'/js/map.js?v=24',
 	'/js/sync.js?v=18',
 	'/js/jsQR.js?v=3',
 	'/js/friends.js?v=9',
@@ -18,10 +18,11 @@ const ASSETS_TO_CACHE = [
 	'/manifest.json',
 	'/icons/icon-192.png',
 	'/icons/icon-512.png',
-	'/maps/map_east456.svg',
-	'/maps/map_east78.svg',
-	'/maps/map_west.svg',
-	'/maps/map_south.svg',
+	'/maps/map_overview.svg',
+	'/maps/map_east123.svg',
+	'/maps/map_east7.svg',
+	'/maps/map_west12.svg',
+	'/maps/map_south12.svg',
 ];
 
 // インストール時にアセットをキャッシュ
@@ -51,30 +52,37 @@ self.addEventListener('activate', (event) => {
 	);
 });
 
-// キャッシュファースト戦略
+// ネットワークファースト戦略
+// - オンライン時: 常に最新を取得（キャッシュも裏で更新）
+// - オフライン時: キャッシュから提供
+// - /maps/*.svg はマップ差し替えが頻繁なため、常にネットワーク優先
 self.addEventListener('fetch', (event) => {
+	const url = new URL(event.request.url);
+	const isMapFile = url.pathname.startsWith('/maps/');
+
+	// マップファイル: キャッシュしない（常に最新）
+	if (isMapFile) {
+		event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+		return;
+	}
+
 	event.respondWith(
-		caches
-			.match(event.request)
-			.then((cachedResponse) => {
-				if (cachedResponse) {
-					return cachedResponse;
-				}
-				return fetch(event.request).then((response) => {
-					// 有効なレスポンスのみキャッシュ
-					if (!response || response.status !== 200 || response.type !== 'basic') {
-						return response;
-					}
-					const responseToCache = response.clone();
-					caches.open(CACHE_NAME).then((cache) => {
-						cache.put(event.request, responseToCache);
-					});
+		fetch(event.request)
+			.then((response) => {
+				if (!response || response.status !== 200 || response.type !== 'basic') {
 					return response;
+				}
+				const responseToCache = response.clone();
+				caches.open(CACHE_NAME).then((cache) => {
+					cache.put(event.request, responseToCache);
 				});
+				return response;
 			})
 			.catch(() => {
-				// オフライン時のフォールバック
-				return caches.match('/index.html');
+				return caches.match(event.request).then((cached) => {
+					if (cached) return cached;
+					return caches.match('/index.html');
+				});
 			}),
 	);
 });
