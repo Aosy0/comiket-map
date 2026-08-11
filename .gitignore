@@ -45,3 +45,24 @@ npm-debug.log*
 app/js/config.js
 
 .omo/
+
+# 解析用の一時ファイル（コミット対象外）
+docs/pdf_svg/
+docs/pdf_halls/
+docs/pdf_zoom/
+docs/pdf_pages/
+docs/pdf_hi/
+docs/pdf_split/
+docs/pdf_headers/
+docs/C108Map_all_B4.pdf
+docs/C108Map_all_B4.txt
+docs/ocr*.txt
+docs/render/
+docs/verify_*.png
+docs/qa_*.png
+docs/debug_*.png
+docs/check_*.png
+docs/E7_v*.png
+docs/E7_numbered.png
+
+out/

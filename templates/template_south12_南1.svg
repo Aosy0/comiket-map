@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1400" viewBox="0 0 2200 1400">
+<defs>
+<style>
+  .bg { fill: #ffffff; }
+  .title { font-family: sans-serif; font-size: 40px; font-weight: bold; fill: #475569; }
+  .hall { fill: none; stroke: #334155; stroke-width: 3; }
+  .hall-label { font-family: sans-serif; font-size: 30px; font-weight: bold; fill: #475569; text-anchor: middle; }
+  .island-guide { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 6,4; }
+  .island-label { font-family: sans-serif; font-size: 24px; font-weight: bold; fill: #475569; text-anchor: middle; dominant-baseline: central; }
+  .number-hint { font-family: sans-serif; font-size: 12px; fill: #94a3b8; text-anchor: middle; dominant-baseline: central; }
+  .note { font-family: sans-serif; font-size: 18px; fill: #94a3b8; }
+</style>
+</defs>
+<rect class="bg" x="0" y="0" width="2200" height="1400" />
+<text class="title" x="30" y="55">南1 ホール 下地テンプレート</text>
+<text class="note" x="30" y="90">点線の長方形が島の位置ガイドです。Inkscapeでこの上に島の外形を描いてください。</text>
+<rect class="island-guide" x="40.0" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="130.9" y="148.0">a</text>
+<text class="number-hint" x="130.9" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="233.8" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="324.7" y="148.0">t</text>
+<text class="number-hint" x="324.7" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="427.6" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="518.5" y="148.0">s</text>
+<text class="number-hint" x="518.5" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="621.5" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="712.4" y="148.0">r</text>
+<text class="number-hint" x="712.4" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="815.3" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="906.2" y="148.0">q</text>
+<text class="number-hint" x="906.2" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1009.1" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="1100.0" y="148.0">p</text>
+<text class="number-hint" x="1100.0" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1202.9" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="1293.8" y="148.0">o</text>
+<text class="number-hint" x="1293.8" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1396.7" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="1487.6" y="148.0">n</text>
+<text class="number-hint" x="1487.6" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1590.5" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="1681.5" y="148.0">m</text>
+<text class="number-hint" x="1681.5" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1784.4" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="1875.3" y="148.0">l</text>
+<text class="number-hint" x="1875.3" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+<rect class="island-guide" x="1978.2" y="120.0" width="181.8" height="1220.0" rx="4" />
+<text class="island-label" x="2069.1" y="148.0">k</text>
+<text class="number-hint" x="2069.1" y="175.0">1, 2, 3, 4, 5, 6, 7, 8...</text>
+</svg>
