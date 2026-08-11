@@ -123,6 +123,8 @@ function serveStatic(req, res) {
 		}
 		res.writeHead(200, {
 			'Content-Type': MIME_TYPES[ext] || 'application/octet-stream',
+			// 開発用サーバーのためキャッシュさせない（マップやJSの変更を即時反映）
+			'Cache-Control': 'no-store',
 		});
 		res.end(data);
 	});

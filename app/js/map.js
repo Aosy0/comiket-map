@@ -34,6 +34,13 @@ const MapViewer = {
 		south12: '/maps/map_south12.svg',
 		overview: '/maps/map_overview.svg',
 	},
+	// 開発環境ではキャッシュを無効化して最新のマップを読み込む
+	mapUrl(mapKey) {
+		const base = this.maps[mapKey];
+		if (!base) return base;
+		const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+		return isDev ? `${base}?v=${Date.now()}` : base;
+	},
 
 	// 現在表示中のマップキー
 	currentMapKey: 'east123',
@@ -679,7 +686,7 @@ const MapViewer = {
 		// 2. なければデフォルトSVG
 		this.updatePageSelector();
 		this.updateDeleteButton(hasCustomMap);
-		const defaultSrc = this.maps[mapKey];
+		const defaultSrc = this.mapUrl(mapKey);
 		if (defaultSrc) {
 			this.setImage(defaultSrc);
 
@@ -719,7 +726,7 @@ const MapViewer = {
 	 */
 	async getEast7Cells() {
 		if (this.east7Cells) return this.east7Cells;
-		const res = await fetch(this.maps.east7);
+		const res = await fetch(this.mapUrl('east7'));
 		if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
 		const text = await res.text();
 		const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
@@ -730,8 +737,8 @@ const MapViewer = {
 			const w = Number.parseFloat(rect.getAttribute('width') || 0);
 			const h = Number.parseFloat(rect.getAttribute('height') || 0);
 			if (!w || !h) return;
-			const [tx, ty] = this.getAncestorTranslate(rect);
-			cells.push({ id: rect.getAttribute('data-circle'), x: x + tx, y: y + ty, w, h });
+			const [ax, ay, angle] = this.applyTransformToPoint(rect, x, y);
+			cells.push({ id: rect.getAttribute('data-circle'), x: ax, y: ay, w, h, angle });
 		});
 		this.east7ViewBox = doc.documentElement.getAttribute('viewBox') || '0 0 199.58465 198.02629';
 		this.east7Cells = cells;
@@ -739,33 +746,70 @@ const MapViewer = {
 	},
 
 	/**
-	 * 祖先要素の translate を累積して絶対座標オフセットを計算
+	 * 点 (x, y) に祖先チェーンの transform を SVG 仕様通りに適用して絶対座標を返す。
+	 * translate / rotate / matrix に対応。戻り値は [x, y, rotateAngle]。
 	 */
-	getAncestorTranslate(el) {
-		let tx = 0;
-		let ty = 0;
+	applyTransformToPoint(el, x, y) {
+		let angle = 0;
+		const chain = [];
 		let node = el;
 		while (node?.getAttribute) {
-			const t = node.getAttribute('transform');
-			if (t) {
-				const m = t.match(/translate\(\s*([-\d.]+)[,\s]+([-\d.]+)/);
-				if (m) {
-					tx += Number.parseFloat(m[1]);
-					ty += Number.parseFloat(m[2]);
-				} else {
-					const mx = t.match(/matrix\(([^)]+)\)/);
-					if (mx) {
-						const v = mx[1].split(/[\s,]+/).map(Number).filter((n) => !Number.isNaN(n));
-						if (v.length === 6) {
-							tx += v[4];
-							ty += v[5];
-						}
-					}
-				}
-			}
+			chain.push(node);
 			node = node.parentNode;
 		}
-		return [tx, ty];
+		// 要素自身の transform から祖先の順に適用（SVG: 点は自身→親→祖父母の順で変換）
+		for (let i = 0; i < chain.length; i++) {
+			const t = chain[i].getAttribute('transform');
+			if (!t) continue;
+			const ops = [];
+			const re = /(translate|rotate|matrix)\(([^)]*)\)/g;
+			let m;
+			while ((m = re.exec(t)) !== null) {
+				ops.push([m[1], m[2]]);
+			}
+			// 同じ transform 内の操作は右から左に適用（transform="A B" は B を先に適用）
+			for (let k = ops.length - 1; k >= 0; k--) {
+				const [kind, argsStr] = ops[k];
+				const args = argsStr
+					.split(/[\s,]+/)
+					.map(Number)
+					.filter((n) => !Number.isNaN(n));
+				if (kind === 'translate') {
+					x += args[0];
+					y += args[1] || 0;
+				} else if (kind === 'rotate') {
+					angle += args[0];
+					const rad = (args[0] * Math.PI) / 180;
+					if (args.length >= 3) {
+						const cx = args[1];
+						const cy = args[2];
+						x -= cx;
+						y -= cy;
+						const nx = x * Math.cos(rad) - y * Math.sin(rad);
+						const ny = x * Math.sin(rad) + y * Math.cos(rad);
+						x = nx + cx;
+						y = ny + cy;
+					} else {
+						const nx = x * Math.cos(rad) - y * Math.sin(rad);
+						const ny = x * Math.sin(rad) + y * Math.cos(rad);
+						x = nx;
+						y = ny;
+					}
+				} else if (kind === 'matrix') {
+					const a = args[0],
+						b = args[1],
+						c = args[2],
+						d = args[3],
+						e = args[4],
+						f = args[5];
+					const nx = a * x + c * y + e;
+					const ny = b * x + d * y + f;
+					x = nx;
+					y = ny;
+				}
+			}
+		}
+		return [x, y, angle];
 	},
 
 	/**
@@ -777,7 +821,8 @@ const MapViewer = {
 		try {
 			const cells = await this.getEast7Cells();
 			if (this.currentMapKey !== 'east7') return;
-			if (!this.image.complete) {
+			// インラインSVGは読み込み済み、<img>の場合はloadを待つ
+			if (this.image.tagName === 'IMG' && !this.image.complete) {
 				await new Promise((resolve) => {
 					this.image.addEventListener('load', resolve, { once: true });
 				});
@@ -807,6 +852,12 @@ const MapViewer = {
 			rect.setAttribute('y', cell.y);
 			rect.setAttribute('width', cell.w);
 			rect.setAttribute('height', cell.h);
+			// 斜め配置のセル（A島など）は回転を適用して向きを合わせる
+			if (cell.angle) {
+				const cx = cell.x + cell.w / 2;
+				const cy = cell.y + cell.h / 2;
+				rect.setAttribute('transform', `rotate(${cell.angle} ${cx} ${cy})`);
+			}
 			rect.setAttribute('data-circle', cell.id);
 			const color = this.circleColors[cell.id];
 			if (color) {
@@ -968,9 +1019,44 @@ const MapViewer = {
 	},
 
 	setImage(src) {
-		if (this.image) {
-			this.image.onload = () => this.fitToContainer();
+		if (!this.image) return;
+		// SVGマップはインライン表示してズーム時の解像度を維持する
+		if (/\.svg(\?|$)/.test(src)) {
+			this.loadInlineSvg(src);
+			return;
+		}
+		this.image.onload = () => this.fitToContainer();
+		this.image.src = src;
+	},
+
+	/**
+	 * SVGをfetchしてインライン要素として表示（ラスタライズせずベクターのまま）
+	 */
+	async loadInlineSvg(src) {
+		try {
+			const res = await fetch(src);
+			if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+			const text = await res.text();
+			const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+			const svgEl = doc.documentElement;
+			// 既存の img を置き換え
+			const old = this.image;
+			this.image = svgEl;
+			this.image.classList.add('map-image');
+			this.image.style.position = 'absolute';
+			this.image.style.left = '50%';
+			this.image.style.top = '50%';
+			this.image.style.transformOrigin = '0 0';
+			// naturalWidth/naturalHeight 互換プロパティを設定
+			const vb = (svgEl.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+			this.image.naturalWidth = vb[2] || 199.58;
+			this.image.naturalHeight = vb[3] || 198.03;
+			old.replaceWith(this.image);
+			this.fitToContainer();
+		} catch (e) {
+			console.error('[MapViewer] inline SVG load failed:', e);
 			this.image.src = src;
+			this.image.onload = () => this.fitToContainer();
 		}
 	},
 
