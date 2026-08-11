@@ -17,6 +17,15 @@ const MapViewer = {
 	lastPinchCenterX: 0,
 	lastPinchCenterY: 0,
 
+	// 東7サークル色付けオーバーレイ
+	circleOverlay: null, // オーバーレイSVG要素
+	circleColors: {}, // { '東7-A-1': '#fde047' } の色マップ
+	circleStorageKey: Storage.KEYS.CIRCLE_COLORS,
+	circlePalette: ['#fde047', '#86efac', '#93c5fd', '#fca5a5'], // 黄→緑→青→赤→解除
+	east7Cells: null, // セッション内キャッシュ
+	dragStartX: 0,
+	dragStartY: 0,
+
 	// マップ画像パス
 	maps: {
 		east123: '/maps/map_east123.svg',
@@ -42,6 +51,7 @@ const MapViewer = {
 
 		if (!this.container || !this.image) return;
 
+		this.loadCircleColors();
 		this.bindEvents();
 		this.initModalEvents();
 		this.loadMap('east123');
@@ -56,6 +66,7 @@ const MapViewer = {
 		this.container.addEventListener('mousemove', (e) => this.onDragMove(e));
 		this.container.addEventListener('mouseup', () => this.onDragEnd());
 		this.container.addEventListener('mouseleave', () => this.onDragEnd());
+		this.container.addEventListener('click', (e) => this.onCircleClick(e));
 		this.container.addEventListener('wheel', (e) => this.onWheel(e));
 
 		// タッチイベント
@@ -640,6 +651,7 @@ const MapViewer = {
 					const blob = await Storage.MapData.getImageWithPage(mapKey, pageNum);
 					if (blob) {
 						const url = URL.createObjectURL(blob);
+						this.removeCircleOverlay();
 						this.setImage(url);
 						this.updatePageSelector();
 						hasCustomMap = true;
@@ -651,6 +663,7 @@ const MapViewer = {
 					const blob = await Storage.MapData.getImage(mapKey);
 					if (blob) {
 						const url = URL.createObjectURL(blob);
+						this.removeCircleOverlay();
 						this.setImage(url);
 						this.updatePageSelector();
 						hasCustomMap = true;
@@ -669,6 +682,13 @@ const MapViewer = {
 		const defaultSrc = this.maps[mapKey];
 		if (defaultSrc) {
 			this.setImage(defaultSrc);
+
+			// 東7のみサークルタップ色付けオーバーレイを構築
+			if (mapKey === 'east7') {
+				this.setupEast7Overlay();
+			} else {
+				this.removeCircleOverlay();
+			}
 
 			// 初回表示時の案内
 			if (!localStorage.getItem('usage_guide_shown')) {
@@ -691,6 +711,187 @@ const MapViewer = {
 			} else {
 				deleteBtn.classList.add('hidden');
 			}
+		}
+	},
+
+	/**
+	 * 東7のセル座標を抽出（セッション内キャッシュ）
+	 */
+	async getEast7Cells() {
+		if (this.east7Cells) return this.east7Cells;
+		const res = await fetch(this.maps.east7);
+		if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+		const text = await res.text();
+		const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+		const cells = [];
+		doc.querySelectorAll('rect[data-circle]').forEach((rect) => {
+			const x = Number.parseFloat(rect.getAttribute('x') || 0);
+			const y = Number.parseFloat(rect.getAttribute('y') || 0);
+			const w = Number.parseFloat(rect.getAttribute('width') || 0);
+			const h = Number.parseFloat(rect.getAttribute('height') || 0);
+			if (!w || !h) return;
+			const [tx, ty] = this.getAncestorTranslate(rect);
+			cells.push({ id: rect.getAttribute('data-circle'), x: x + tx, y: y + ty, w, h });
+		});
+		this.east7ViewBox = doc.documentElement.getAttribute('viewBox') || '0 0 199.58465 198.02629';
+		this.east7Cells = cells;
+		return cells;
+	},
+
+	/**
+	 * 祖先要素の translate を累積して絶対座標オフセットを計算
+	 */
+	getAncestorTranslate(el) {
+		let tx = 0;
+		let ty = 0;
+		let node = el;
+		while (node?.getAttribute) {
+			const t = node.getAttribute('transform');
+			if (t) {
+				const m = t.match(/translate\(\s*([-\d.]+)[,\s]+([-\d.]+)/);
+				if (m) {
+					tx += Number.parseFloat(m[1]);
+					ty += Number.parseFloat(m[2]);
+				} else {
+					const mx = t.match(/matrix\(([^)]+)\)/);
+					if (mx) {
+						const v = mx[1].split(/[\s,]+/).map(Number).filter((n) => !Number.isNaN(n));
+						if (v.length === 6) {
+							tx += v[4];
+							ty += v[5];
+						}
+					}
+				}
+			}
+			node = node.parentNode;
+		}
+		return [tx, ty];
+	},
+
+	/**
+	 * 東7オーバーレイを構築
+	 */
+	async setupEast7Overlay() {
+		this.removeCircleOverlay();
+		if (this.currentMapKey !== 'east7') return;
+		try {
+			const cells = await this.getEast7Cells();
+			if (this.currentMapKey !== 'east7') return;
+			if (!this.image.complete) {
+				await new Promise((resolve) => {
+					this.image.addEventListener('load', resolve, { once: true });
+				});
+			}
+			this.buildCircleOverlay(cells);
+		} catch (e) {
+			console.error('[MapViewer] east7 overlay failed:', e);
+			this.removeCircleOverlay();
+		}
+	},
+
+	/**
+	 * オーバーレイSVGを生成してコンテナに追加
+	 */
+	buildCircleOverlay(cells) {
+		if (!this.container || !this.image) return;
+		const NS = 'http://www.w3.org/2000/svg';
+		const overlay = document.createElementNS(NS, 'svg');
+		overlay.setAttribute('class', 'map-image map-circle-overlay');
+		overlay.setAttribute('viewBox', this.east7ViewBox);
+		overlay.setAttribute('width', this.image.naturalWidth);
+		overlay.setAttribute('height', this.image.naturalHeight);
+
+		cells.forEach((cell) => {
+			const rect = document.createElementNS(NS, 'rect');
+			rect.setAttribute('x', cell.x);
+			rect.setAttribute('y', cell.y);
+			rect.setAttribute('width', cell.w);
+			rect.setAttribute('height', cell.h);
+			rect.setAttribute('data-circle', cell.id);
+			const color = this.circleColors[cell.id];
+			if (color) {
+				rect.setAttribute('fill', color);
+				rect.setAttribute('fill-opacity', '0.6');
+			} else {
+				rect.setAttribute('fill', 'transparent');
+			}
+			rect.style.pointerEvents = 'all';
+			rect.style.cursor = 'pointer';
+			overlay.appendChild(rect);
+		});
+
+		this.container.appendChild(overlay);
+		this.circleOverlay = overlay;
+		this.updateTransform();
+	},
+
+	/**
+	 * オーバーレイを削除
+	 */
+	removeCircleOverlay() {
+		if (this.circleOverlay) {
+			this.circleOverlay.remove();
+			this.circleOverlay = null;
+		}
+	},
+
+	/**
+	 * サークルセルのクリック/タップ処理
+	 */
+	onCircleClick(e) {
+		if (!this.circleOverlay) return;
+		const target = e.target;
+		if (!target || !target.hasAttribute || !target.hasAttribute('data-circle')) return;
+		const dx = Math.abs(e.clientX - this.dragStartX);
+		const dy = Math.abs(e.clientY - this.dragStartY);
+		if (dx > 10 || dy > 10) return;
+		this.cycleCircleColor(target);
+	},
+
+	/**
+	 * 色をサイクルで切り替え（最後は解除）
+	 */
+	cycleCircleColor(rect) {
+		const id = rect.getAttribute('data-circle');
+		const current = this.circleColors[id];
+		const idx = current ? this.circlePalette.indexOf(current) : -1;
+		let next;
+		if (idx === -1) {
+			next = this.circlePalette[0];
+		} else if (idx >= this.circlePalette.length - 1) {
+			next = null;
+		} else {
+			next = this.circlePalette[idx + 1];
+		}
+		if (next) {
+			this.circleColors[id] = next;
+			rect.setAttribute('fill', next);
+		} else {
+			delete this.circleColors[id];
+			rect.setAttribute('fill', 'transparent');
+		}
+		this.saveCircleColors();
+	},
+
+	/**
+	 * 保存済みの色を読み込み
+	 */
+	loadCircleColors() {
+		try {
+			this.circleColors = JSON.parse(localStorage.getItem(this.circleStorageKey) || '{}');
+		} catch (e) {
+			this.circleColors = {};
+		}
+	},
+
+	/**
+	 * 色を保存
+	 */
+	saveCircleColors() {
+		try {
+			localStorage.setItem(this.circleStorageKey, JSON.stringify(this.circleColors));
+		} catch (e) {
+			console.error('[MapViewer] failed to save circle colors:', e);
 		}
 	},
 
@@ -726,6 +927,7 @@ const MapViewer = {
 			const blob = await Storage.MapData.getImageWithPage(this.currentMapKey, pageNum);
 			if (blob) {
 				const url = URL.createObjectURL(blob);
+				this.removeCircleOverlay();
 				this.setImage(url);
 				this.updatePageSelector();
 			}
@@ -831,6 +1033,9 @@ const MapViewer = {
 		if (this.image) {
 			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
 		}
+		if (this.circleOverlay) {
+			this.circleOverlay.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+		}
 	},
 
 	/**
@@ -838,6 +1043,8 @@ const MapViewer = {
 	 */
 	onDragStart(e) {
 		this.isDragging = true;
+		this.dragStartX = e.clientX;
+		this.dragStartY = e.clientY;
 		this.startX = e.clientX - this.translateX;
 		this.startY = e.clientY - this.translateY;
 	},
@@ -877,6 +1084,8 @@ const MapViewer = {
 		if (e.touches.length === 1) {
 			// シングルタッチ：ドラッグ
 			this.isDragging = true;
+			this.dragStartX = e.touches[0].clientX;
+			this.dragStartY = e.touches[0].clientY;
 			this.startX = e.touches[0].clientX - this.translateX;
 			this.startY = e.touches[0].clientY - this.translateY;
 		} else if (e.touches.length === 2) {

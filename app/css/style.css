@@ -626,6 +626,17 @@ main {
 	height: auto;
 }
 
+/* 東7サークル色付けオーバーレイ */
+.map-circle-overlay {
+	display: block;
+	pointer-events: none;
+}
+
+.map-circle-overlay rect[data-circle] {
+	pointer-events: all;
+	cursor: pointer;
+}
+
 /* マップ設定パネル */
 .map-settings {
 	padding: 12px;

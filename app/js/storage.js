@@ -12,6 +12,8 @@ const Storage = {
 		LEGACY_CIRCLES: 'C108_circles',
 		LEGACY_SETTINGS: 'C108_settings',
 		LEGACY_FRIENDS: 'C108_friends',
+		// 東7マップのサークル色データ
+		CIRCLE_COLORS: 'map_circle_colors_east7',
 	},
 
 	// デフォルトの開催回一覧
@@ -540,5 +542,6 @@ const Storage = {
 		localStorage.removeItem(this.getCirclesKey());
 		localStorage.removeItem(this.getSettingsKey());
 		localStorage.removeItem(this.getFriendsKey());
+		localStorage.removeItem(this.KEYS.CIRCLE_COLORS);
 	},
 };
