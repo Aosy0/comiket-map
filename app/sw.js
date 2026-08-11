@@ -2,7 +2,7 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'circlemap-v64';
+const CACHE_NAME = 'circlemap-v65';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
@@ -52,37 +52,66 @@ self.addEventListener('activate', (event) => {
 	);
 });
 
-// ネットワークファースト戦略
-// - オンライン時: 常に最新を取得（キャッシュも裏で更新）
-// - オフライン時: キャッシュから提供
-// - /maps/*.svg はマップ差し替えが頻繁なため、常にネットワーク優先
-self.addEventListener('fetch', (event) => {
-	const url = new URL(event.request.url);
-	const isMapFile = url.pathname.startsWith('/maps/');
+// Stale-While-Revalidate + タイムアウト戦略
+// - キャッシュがあれば即座に返す（弱い電波でも遅延なし）
+// - 裏でネットワークから最新を取得し、成功時のみキャッシュを更新
+// - fetch はタイムアウト付き（3秒）。弱い電波で長時間待たない
+// - タイムアウト・失敗時はキャッシュのまま表示を継続
+const FETCH_TIMEOUT_MS = 3000;
 
-	// マップファイル: キャッシュしない（常に最新）
-	if (isMapFile) {
-		event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+// タイムアウト付きfetch
+function fetchWithTimeout(request) {
+	return new Promise((resolve, reject) => {
+		const controller = new AbortController();
+		const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+		fetch(request, { signal: controller.signal })
+			.then((response) => {
+				clearTimeout(timer);
+				resolve(response);
+			})
+			.catch((err) => {
+				clearTimeout(timer);
+				reject(err);
+			});
+	});
+}
+
+self.addEventListener('fetch', (event) => {
+	// キャッシュ対象外のリクエスト（GET以外）は素通し
+	if (event.request.method !== 'GET') {
 		return;
 	}
 
 	event.respondWith(
-		fetch(event.request)
-			.then((response) => {
-				if (!response || response.status !== 200 || response.type !== 'basic') {
+		caches.match(event.request).then((cachedResponse) => {
+			// 裏で最新を取得してキャッシュを更新（失敗しても表示には影響しない）
+			const revalidate = fetchWithTimeout(event.request)
+				.then((response) => {
+					if (response && response.status === 200 && response.type === 'basic') {
+						const responseToCache = response.clone();
+						caches.open(CACHE_NAME).then((cache) => {
+							cache.put(event.request, responseToCache);
+						});
+					}
 					return response;
-				}
-				const responseToCache = response.clone();
-				caches.open(CACHE_NAME).then((cache) => {
-					cache.put(event.request, responseToCache);
-				});
-				return response;
-			})
-			.catch(() => {
-				return caches.match(event.request).then((cached) => {
-					if (cached) return cached;
+				})
+				.catch(() => null);
+
+			// キャッシュがあれば即座に返し、無ければネットワーク結果を待つ
+			if (cachedResponse) {
+				// 更新を待たずにキャッシュを返す（弱電波でも即表示）
+				event.waitUntil(revalidate);
+				return cachedResponse;
+			}
+			// キャッシュが無い場合: ネットワークから取得（タイムアウト付き）
+			return revalidate.then((response) => {
+				if (response) return response;
+				// ネットワーク失敗時: ナビゲーションなら index.html へフォールバック
+				if (event.request.mode === 'navigate') {
 					return caches.match('/index.html');
-				});
-			}),
+				}
+				return new Response('', { status: 504, statusText: 'Offline' });
+			});
+		}),
 	);
 });
