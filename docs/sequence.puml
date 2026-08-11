@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam defaultFontSize 20
+skinparam sequence {
+    ActorFontSize 24
+    ActorFontStyle bold
+    ParticipantFontSize 24
+    NoteFontSize 20
+    MessageFontSize 18
+}
+skinparam titleFontSize 24
+
+title コミケットマップ 通信機能
+
+autonumber
+
+actor "ユーザー" as User
+participant "ブラウザ" as Browser
+participant "アプリ" as App
+participant "Friends" as Friends
+participant "Storage" as Storage
+participant "Sync" as Sync
+participant "WSサーバー" as WSServer
+participant "Gemini API" as Gemini
+participant "相手端末" as Peer
+
+== リスト共有（QR / URL / コード） ==
+User -> App: リストを共有
+App -> Sync: 共有データを作成
+Sync -> Storage: サークル一覧を取得
+Storage --> Sync: サークル一覧
+Sync -> App: QRコード / URL / コードを表示
+App -> Friends: WebSocket接続 (相互登録待機)
+Friends -> WSServer: join(roomId)
+WSServer --> Friends: 待機中
+
+User -> App: QRスキャン / URL入力
+App -> Friends: データを読み込み
+Friends -> Storage: 友達＋サークルを保存
+Friends -> WSServer: join(roomId)
+WSServer -> Peer: user-joined (相互友達登録)
+note right #ffd: お互いの端末で自動的に友達追加
+
+== フレンドチャット ==
+User -> App: 友達一覧 → チャットを開く
+App -> Friends: openChat(roomId)
+Friends -> WSServer: WebSocket接続
+WSServer --> Friends: 接続確立
+User -> App: メッセージを送信
+App -> Friends: sendChatMessage()
+Friends -> Friends: 楽観的UI（即時表示）
+Friends -> WSServer: message(text)
+WSServer -> Peer: メッセージ中継
+WSServer --> Friends: 送信確認
+Peer -> WSServer: 返信
+WSServer -> Friends: メッセージ受信
+Friends --> App: 吹き出し表示
+User -> App: チャットを閉じる
+Friends -> WSServer: 切断
+
+== AIチャット ==
+User -> App: AIチャットを開く
+App -> App: チャット画面表示
+User -> App: メッセージを送信
+App -> App: 吹き出しを表示
+App -> App: /api/gemini にリクエスト
+App -> Gemini: POST プロンプト
+Gemini --> App: AI応答
+App -> App: AIの吹き出しを表示
+
+@enduml

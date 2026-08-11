@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+skinparam defaultFontName Noto Sans JP
+skinparam defaultFontSize 16
+skinparam sequence {
+    ActorFontSize 18
+    ActorFontStyle bold
+    ParticipantFontSize 16
+    NoteFontSize 14
+    MessageFontSize 14
+    BoxPadding 6
+    ParticipantPadding 12
+}
+skinparam dpi 200
+skinparam titleFontSize 20
+
+title フレンドチャット
+
+autonumber
+
+actor "ユーザー" as User
+participant "アプリ" as App
+participant "Friends"
+participant "中継Server" as WSServer
+participant "相手" as Peer
+
+== 接続 ==
+User -> App: チャットを開く
+App -> Friends: openChat(roomId)
+Friends -> WSServer: WebSocket接続
+WSServer --> Friends: 接続確立
+
+== 送信 ==
+User -> App: メッセージ送信
+App -> Friends: sendChatMessage()
+Friends -> Friends: 楽観的UI表示
+Friends -> WSServer: message(text)
+WSServer -> Peer: 中継
+WSServer --> Friends: 送信確認
+
+== 受信 ==
+Peer -> WSServer: 返信
+WSServer -> Friends: 受信
+Friends --> App: 吹き出し表示
+
+== 切断 ==
+User -> App: 閉じる
+Friends -> WSServer: 切断
+
+@enduml
