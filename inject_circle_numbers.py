@@ -115,6 +115,8 @@ def get_absolute_position(elem):
 
 
 def inject_numbers(svg_path, json_path, out_path):
+    # デフォルト名前空間として出力（ns0: 接頭辞を防ぐ）
+    ET.register_namespace("", SVG_NS)
     tree = ET.parse(svg_path)
     root = tree.getroot()
 

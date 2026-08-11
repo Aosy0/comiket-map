@@ -69,4 +69,21 @@ docs/check_*.png
 docs/E7_v*.png
 docs/E7_numbered.png
 
+# 未最適化のInkscape出力（巨大な作業中ファイル）
+docs/inkscape/CircleMap.svg
+docs/inkscape/CircleMap_E7.svg
+docs/inkscape/CircleMap_plain.svg
+docs/inkscape/E7_plain.svg
+docs/inkscape/E7_plain_layer_5.svg
+docs/inkscape/E7_plain_layer-2_5.svg
+docs/inkscape/E7_plain_layer_*.svg
+docs/inkscape/E7_scoured.svg
+docs/inkscape/E7_rectified.svg
+docs/inkscape/E7_optimized.svg
+docs/inkscape/E7_min.svg
+docs/inkscape/E7_min.png
+docs/inkscape/E7_layer25_final.png
+docs/inkscape/E7_layer25_numbered.svg
+docs/inkscape/*.png
+
 out/
