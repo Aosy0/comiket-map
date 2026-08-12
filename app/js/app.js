@@ -20,6 +20,11 @@ const App = {
 	init() {
 		console.log('サークルマップ - 初期化開始');
 
+		// スクロール位置の自動復元を無効化（リストタブは内部スクロールのため、復元でカードが隠れるのを防ぐ）
+		if ('scrollRestoration' in history) {
+			history.scrollRestoration = 'manual';
+		}
+
 		// 旧データ（C108固定キー）をC107へ移行（初回起動時のみ・circle読み込みより前）
 		const migrated = Storage.migrateLegacyData();
 		if (migrated) {
@@ -481,6 +486,11 @@ const App = {
 			content.classList.toggle('active', content.id === `tab-${tabId}`);
 		});
 
+		// リストタブは body スクロールが無効なため、前のタブのスクロール位置を引き継がない
+		if (tabId === 'list') {
+			window.scrollTo(0, 0);
+		}
+
 		// マップタブに切り替えた場合、表示後にフィット調整
 		if (tabId === 'map') {
 			// DOMの更新を待ってからフィット処理を実行
@@ -929,6 +939,12 @@ const App = {
 		this.showToast('サークルを追加しました', 0);
 		this.switchTab('list');
 		this.renderCircleList();
+
+		// 追加したカードはリスト末尾にあるため、スクロール位置を引き継がず画面中央に表示する
+		const addedCard = document.querySelector(`.circle-card[data-id="${circle.id}"]`);
+		if (addedCard) {
+			addedCard.scrollIntoView({ block: 'center' });
+		}
 	},
 
 	/**

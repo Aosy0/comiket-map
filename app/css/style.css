@@ -50,11 +50,14 @@
 	--safe-bottom: env(safe-area-inset-bottom, 0px);
 	/* stickyヘッダー分のスクロールオフセット（端末差を吸収するため少し余裕を持たせる） */
 	--header-offset: 80px;
+	/* ヘッダー高さ（マップタブの表示高さ計算に使用。768px以上では横並びになり約半分になる） */
+	--header-height: 100px;
 }
 
 /* アンカー移動/自動スクロール時にヘッダー裏へ潜り込むのを防ぐ */
 html {
 	scroll-padding-top: var(--header-offset);
+	overflow-x: hidden; /* 画面幅いっぱいの要素がスクロールバー分はみ出さないようにする */
 }
 
 /* フォーカス移動や :target で要素がヘッダーに隠れないようにする */
@@ -276,13 +279,30 @@ main {
 	min-height: calc(100dvh - 100px - 56px);
 }
 
+/* リストタブ - カードが画面に収まるときはスクロール不可、溢れると内部スクロール */
+#tab-list {
+	/* フィルターバーの sticky 固定位置をヘッダー直下に合わせるため上パディングは 0 */
+	padding-top: 0;
+	/* ヘッダーと下部ナビ(60px)を除いた高さで内部スクロールする */
+	height: calc(100dvh - var(--header-height) - 60px);
+	overflow-y: auto;
+	overflow-x: hidden; /* 要素が幅からはみ出しても横スクロールを発生させない */
+	-webkit-overflow-scrolling: touch;
+}
+
+/* リストタブ表示中は body スクロールを止める（カードが少ないときに余分にスクロールできないように） */
+html:has(#tab-list.active),
+body:has(#tab-list.active) {
+	overflow: hidden;
+}
+
 /* マップタブ専用レイアウト - ボタン固定 & スクロール無効 */
 #tab-map {
 	display: none;
 	padding: 0;
-	/* ヘッダー(約100px)と下部ナビ(60px)を除いた高さ。ナビを考慮しないとマップ下端がタブバーに隠れる */
-	height: calc(100vh - 100px - 60px);
-	height: calc(100dvh - 100px - 60px);
+	/* ヘッダーと下部ナビ(60px)を除いた高さ。ナビを考慮しないとマップ下端がタブバーに隠れる */
+	height: calc(100vh - var(--header-height) - 60px);
+	height: calc(100dvh - var(--header-height) - 60px);
 	overflow: hidden;
 }
 
@@ -294,11 +314,12 @@ main {
 /* フィルターバー */
 .filter-bar {
 	position: sticky;
-	top: 60px;
+	/* リストタブ内部スクロールの上端に固定（ヘッダーの直下に表示される） */
+	top: 0;
 	z-index: 90;
 	background: var(--bg);
-	padding: 12px;
-	margin: -12px -12px 12px -12px;
+	padding: 8px 12px;
+	margin: 0 -12px 12px -12px;
 	border-bottom: 1px solid var(--border);
 	box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1); /* 描画負荷の低いシンプルな影 */
 }
@@ -318,6 +339,7 @@ main {
 	font-size: 0.875rem;
 	cursor: pointer;
 	color: var(--text);
+	white-space: nowrap; /* ボタン幅が足りないときに「1日目」等が折り返さないようにする */
 }
 
 .filter-btn.active {
@@ -1372,6 +1394,35 @@ input:checked + .toggle-slider:before {
 
 /* レスポンシブ */
 @media (min-width: 768px) {
+	/* ヘッダーを横並びにして高さを抑える（PC） */
+	:root {
+		--header-height: 40px;
+	}
+
+	header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		padding: 6px 24px;
+	}
+
+	header h1 {
+		flex: 0 0 auto;
+		text-align: left;
+	}
+
+	.event-select {
+		flex: 0 0 auto;
+		margin: 0;
+	}
+
+	.header-status {
+		flex: 0 0 auto;
+		margin: 0 0 0 auto;
+		text-align: right;
+	}
+
 	#app {
 		max-width: 100%;
 		margin: 0 auto;
@@ -1384,6 +1435,18 @@ input:checked + .toggle-slider:before {
 		padding: 0 24px;
 	}
 
+	/* マップタブ表示中は main の幅制限を解除してマップを全幅表示（PC） */
+	main:has(#tab-map.active) {
+		max-width: none;
+		padding: 0;
+	}
+
+	/* リストタブ表示中も main の幅制限を解除し、フィルターバーを画面幅いっぱいに表示（PC） */
+	main:has(#tab-list.active) {
+		max-width: none;
+		padding: 0;
+	}
+
 	.tab-content {
 		padding: 16px 0;
 	}
@@ -1394,6 +1457,10 @@ input:checked + .toggle-slider:before {
 		flex-wrap: wrap;
 		gap: 12px;
 		align-items: flex-start;
+		justify-content: center; /* 画面幅いっぱいのフィルターバー内で要素を中央に配置 */
+		/* 線とシャドウを画面端まで続けるためフィルターバーを画面幅いっぱいに広げる（PC） */
+		margin-left: calc(50% - 50vw);
+		margin-right: calc(50% - 50vw);
 	}
 
 	.day-filter {
@@ -1401,9 +1468,14 @@ input:checked + .toggle-slider:before {
 		margin-bottom: 0;
 	}
 
+	.filter-btn {
+		flex: 0 0 auto; /* PCではボタンを内容幅にして折り返しを防ぐ */
+	}
+
 	.search-box {
 		flex: 1;
 		min-width: 200px;
+		max-width: 480px; /* 画面幅いっぱいまで伸びるのを防ぎ、検索バーが横長になりすぎないようにする */
 		margin-bottom: 0;
 	}
 
@@ -1418,6 +1490,8 @@ input:checked + .toggle-slider:before {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 		gap: 12px;
+		max-width: 1000px; /* main 全幅表示時もカードは従来の中央幅に保つ */
+		margin: 0 auto;
 	}
 
 	.circle-list.compact {
