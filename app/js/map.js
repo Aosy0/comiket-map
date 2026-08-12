@@ -17,12 +17,10 @@ const MapViewer = {
 	lastPinchCenterX: 0,
 	lastPinchCenterY: 0,
 
-	// 東7サークル色付けオーバーレイ
-	circleOverlay: null, // オーバーレイSVG要素
+	// 東7サークル色付け（SVG内のrectを直接塗りつぶす）
 	circleColors: {}, // { '東7-A-1': '#fde047' } の色マップ
 	circleStorageKey: Storage.KEYS.CIRCLE_COLORS,
 	circlePalette: ['#fde047', '#86efac', '#93c5fd', '#fca5a5'], // 黄→緑→青→赤→解除
-	east7Cells: null, // セッション内キャッシュ
 	dragStartX: 0,
 	dragStartY: 0,
 
@@ -658,7 +656,6 @@ const MapViewer = {
 					const blob = await Storage.MapData.getImageWithPage(mapKey, pageNum);
 					if (blob) {
 						const url = URL.createObjectURL(blob);
-						this.removeCircleOverlay();
 						this.setImage(url);
 						this.updatePageSelector();
 						hasCustomMap = true;
@@ -670,7 +667,6 @@ const MapViewer = {
 					const blob = await Storage.MapData.getImage(mapKey);
 					if (blob) {
 						const url = URL.createObjectURL(blob);
-						this.removeCircleOverlay();
 						this.setImage(url);
 						this.updatePageSelector();
 						hasCustomMap = true;
@@ -688,13 +684,11 @@ const MapViewer = {
 		this.updateDeleteButton(hasCustomMap);
 		const defaultSrc = this.mapUrl(mapKey);
 		if (defaultSrc) {
-			this.setImage(defaultSrc);
+			await this.setImage(defaultSrc);
 
-			// 東7のみサークルタップ色付けオーバーレイを構築
+			// 東7のみサークルタップ色付けを有効化
 			if (mapKey === 'east7') {
-				this.setupEast7Overlay();
-			} else {
-				this.removeCircleOverlay();
+				await this.setupEast7Overlay();
 			}
 
 			// 初回表示時の案内
@@ -719,30 +713,6 @@ const MapViewer = {
 				deleteBtn.classList.add('hidden');
 			}
 		}
-	},
-
-	/**
-	 * 東7のセル座標を抽出（セッション内キャッシュ）
-	 */
-	async getEast7Cells() {
-		if (this.east7Cells) return this.east7Cells;
-		const res = await fetch(this.mapUrl('east7'));
-		if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
-		const text = await res.text();
-		const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
-		const cells = [];
-		doc.querySelectorAll('rect[data-circle]').forEach((rect) => {
-			const x = Number.parseFloat(rect.getAttribute('x') || 0);
-			const y = Number.parseFloat(rect.getAttribute('y') || 0);
-			const w = Number.parseFloat(rect.getAttribute('width') || 0);
-			const h = Number.parseFloat(rect.getAttribute('height') || 0);
-			if (!w || !h) return;
-			const [ax, ay, angle] = this.applyTransformToPoint(rect, x, y);
-			cells.push({ id: rect.getAttribute('data-circle'), x: ax, y: ay, w, h, angle });
-		});
-		this.east7ViewBox = doc.documentElement.getAttribute('viewBox') || '0 0 199.58465 198.02629';
-		this.east7Cells = cells;
-		return cells;
 	},
 
 	/**
@@ -813,84 +783,29 @@ const MapViewer = {
 	},
 
 	/**
-	 * 東7オーバーレイを構築
+	 * 東7のサークルrectを直接操作（オーバーレイを使わずSVG内を直接塗りつぶす）
 	 */
 	async setupEast7Overlay() {
-		this.removeCircleOverlay();
 		if (this.currentMapKey !== 'east7') return;
-		try {
-			const cells = await this.getEast7Cells();
-			if (this.currentMapKey !== 'east7') return;
-			// インラインSVGは読み込み済み、<img>の場合はloadを待つ
-			if (this.image.tagName === 'IMG' && !this.image.complete) {
-				await new Promise((resolve) => {
-					this.image.addEventListener('load', resolve, { once: true });
-				});
-			}
-			this.buildCircleOverlay(cells);
-		} catch (e) {
-			console.error('[MapViewer] east7 overlay failed:', e);
-			this.removeCircleOverlay();
+		// インラインSVG読み込み済みの場合のみ直接バインド
+		if (this.image && this.image.tagName === 'svg') {
+			this.bindCircleRects();
+			return;
 		}
-	},
-
-	/**
-	 * オーバーレイSVGを生成してコンテナに追加
-	 */
-	buildCircleOverlay(cells) {
-		if (!this.container || !this.image) return;
-		const NS = 'http://www.w3.org/2000/svg';
-		const overlay = document.createElementNS(NS, 'svg');
-		overlay.setAttribute('class', 'map-image map-circle-overlay');
-		overlay.setAttribute('viewBox', this.east7ViewBox);
-		overlay.setAttribute('width', this.image.naturalWidth);
-		overlay.setAttribute('height', this.image.naturalHeight);
-
-		cells.forEach((cell) => {
-			const rect = document.createElementNS(NS, 'rect');
-			rect.setAttribute('x', cell.x);
-			rect.setAttribute('y', cell.y);
-			rect.setAttribute('width', cell.w);
-			rect.setAttribute('height', cell.h);
-			// 斜め配置のセル（A島など）は回転を適用して向きを合わせる
-			if (cell.angle) {
-				const cx = cell.x + cell.w / 2;
-				const cy = cell.y + cell.h / 2;
-				rect.setAttribute('transform', `rotate(${cell.angle} ${cx} ${cy})`);
-			}
-			rect.setAttribute('data-circle', cell.id);
-			const color = this.circleColors[cell.id];
-			if (color) {
-				rect.setAttribute('fill', color);
-				rect.setAttribute('fill-opacity', '0.6');
+		// <img> の場合は読み込み完了を待ってバインド
+		if (this.image && this.image.tagName === 'IMG') {
+			if (this.image.complete) {
+				this.bindCircleRects();
 			} else {
-				rect.setAttribute('fill', 'transparent');
+				this.image.addEventListener('load', () => this.bindCircleRects(), { once: true });
 			}
-			rect.style.pointerEvents = 'all';
-			rect.style.cursor = 'pointer';
-			overlay.appendChild(rect);
-		});
-
-		this.container.appendChild(overlay);
-		this.circleOverlay = overlay;
-		this.updateTransform();
-	},
-
-	/**
-	 * オーバーレイを削除
-	 */
-	removeCircleOverlay() {
-		if (this.circleOverlay) {
-			this.circleOverlay.remove();
-			this.circleOverlay = null;
 		}
 	},
 
 	/**
-	 * サークルセルのクリック/タップ処理
+	 * サークルセルのクリック/タップ処理（ドラッグ判定後に色を切り替える）
 	 */
 	onCircleClick(e) {
-		if (!this.circleOverlay) return;
 		const target = e.target;
 		if (!target || !target.hasAttribute || !target.hasAttribute('data-circle')) return;
 		const dx = Math.abs(e.clientX - this.dragStartX);
@@ -916,10 +831,10 @@ const MapViewer = {
 		}
 		if (next) {
 			this.circleColors[id] = next;
-			rect.setAttribute('fill', next);
+			rect.style.fill = next;
 		} else {
 			delete this.circleColors[id];
-			rect.setAttribute('fill', 'transparent');
+			rect.style.fill = 'transparent';
 		}
 		this.saveCircleColors();
 	},
@@ -978,7 +893,6 @@ const MapViewer = {
 			const blob = await Storage.MapData.getImageWithPage(this.currentMapKey, pageNum);
 			if (blob) {
 				const url = URL.createObjectURL(blob);
-				this.removeCircleOverlay();
 				this.setImage(url);
 				this.updatePageSelector();
 			}
@@ -1018,11 +932,11 @@ const MapViewer = {
 		}
 	},
 
-	setImage(src) {
+	async setImage(src) {
 		if (!this.image) return;
 		// SVGマップはインライン表示してズーム時の解像度を維持する
 		if (/\.svg(\?|$)/.test(src)) {
-			this.loadInlineSvg(src);
+			await this.loadInlineSvg(src);
 			return;
 		}
 		this.image.onload = () => this.fitToContainer();
@@ -1060,6 +974,47 @@ const MapViewer = {
 		}
 	},
 
+	/**
+	 * インラインSVG内のサークルrectにクリック処理を直接バインドし、保存済み色を復元する
+	 */
+	bindCircleRects() {
+		if (!this.image) return;
+		const svg = this.image;
+		// 番号テキストがクリックを横取りしないよう透過する
+		svg.querySelectorAll('text').forEach((t) => {
+			t.style.pointerEvents = 'none';
+		});
+		const rects = svg.querySelectorAll('rect[data-circle]');
+		rects.forEach((rect) => {
+			const id = rect.getAttribute('data-circle');
+			// 透明でもクリック可能にする
+			rect.style.pointerEvents = 'all';
+			rect.style.cursor = 'pointer';
+			const color = this.circleColors[id];
+			if (color) {
+				rect.style.fill = color;
+				rect.setAttribute('fill-opacity', '0.6');
+			} else {
+				rect.style.fill = 'transparent';
+			}
+			if (!rect._circleBound) {
+				rect.addEventListener('click', (e) => this.onCircleRectClick(e, rect));
+				rect._circleBound = true;
+			}
+		});
+	},
+
+	/**
+	 * サークルrectを直接クリックしたときの処理
+	 */
+	onCircleRectClick(e, rect) {
+		const dx = Math.abs(e.clientX - this.dragStartX);
+		const dy = Math.abs(e.clientY - this.dragStartY);
+		if (dx > 10 || dy > 10) return;
+		e.stopPropagation();
+		this.cycleCircleColor(rect);
+	},
+
 	showToast(msg, duration = 3000) {
 		const toast = document.getElementById('toast');
 		if (toast) {
@@ -1093,8 +1048,8 @@ const MapViewer = {
 		const scaleY = containerHeight / imageHeight;
 		const fitScale = Math.min(scaleX, scaleY);
 
-		// 最小スケールを全体表示サイズに設定（これより小さくならない）
-		this.minScale = fitScale;
+		// 初期表示は全体が映るスケール、最小スケールはその半分まで縮小可能に
+		this.minScale = Math.min(fitScale * 0.5, 0.5);
 		this.scale = fitScale;
 
 		// 画像を中央に配置（CSSのleft:50%, top:50%に対応してオフセット）
@@ -1118,9 +1073,6 @@ const MapViewer = {
 	updateTransform() {
 		if (this.image) {
 			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
-		}
-		if (this.circleOverlay) {
-			this.circleOverlay.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
 		}
 	},
 

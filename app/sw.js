@@ -2,7 +2,7 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'circlemap-v66';
+const CACHE_NAME = 'circlemap-v67';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
