@@ -280,8 +280,9 @@ main {
 #tab-map {
 	display: none;
 	padding: 0;
-	height: calc(100vh - 100px);
-	height: calc(100dvh - 100px);
+	/* ヘッダー(約100px)と下部ナビ(60px)を除いた高さ。ナビを考慮しないとマップ下端がタブバーに隠れる */
+	height: calc(100vh - 100px - 60px);
+	height: calc(100dvh - 100px - 60px);
 	overflow: hidden;
 }
 

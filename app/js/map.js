@@ -7,7 +7,7 @@ const MapViewer = {
 	image: null,
 	scale: 1,
 	minScale: 0.5,
-	maxScale: 4,
+	maxScale: 10,
 	translateX: 0,
 	translateY: 0,
 	isDragging: false,
@@ -108,6 +108,13 @@ const MapViewer = {
 		if (customBtn) {
 			customBtn.addEventListener('click', () => this.openModal());
 		}
+
+		// ウィンドウリサイズ時にフィット（連続リサイズ対策で遅延実行）
+		let resizeTimer = null;
+		window.addEventListener('resize', () => {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => this.fitToContainer(), 200);
+		});
 	},
 
 	/**
@@ -965,6 +972,11 @@ const MapViewer = {
 			const vb = (svgEl.getAttribute('viewBox') || '').split(/\s+/).map(Number);
 			this.image.naturalWidth = vb[2] || 199.58;
 			this.image.naturalHeight = vb[3] || 198.03;
+			// width/height 属性を viewBox に合わせて設定（CSSのmax-width影響で二重拡大されるのを防ぐ）
+			this.image.setAttribute('width', this.image.naturalWidth);
+			this.image.setAttribute('height', this.image.naturalHeight);
+			// width/height を直接変更して拡大するため、max-width制限を無効化
+			this.image.style.maxWidth = 'none';
 			old.replaceWith(this.image);
 			this.fitToContainer();
 		} catch (e) {
@@ -1041,6 +1053,12 @@ const MapViewer = {
 		const imageWidth = this.image.naturalWidth;
 		const imageHeight = this.image.naturalHeight;
 
+		// マップタブが非アクティブでコンテナサイズが0の場合は、表示後に再試行
+		if (containerWidth === 0 || containerHeight === 0) {
+			requestAnimationFrame(() => this.fitToContainer());
+			return;
+		}
+
 		if (imageWidth === 0 || imageHeight === 0) return;
 
 		// コンテナに収まる最大スケールを計算
@@ -1048,9 +1066,12 @@ const MapViewer = {
 		const scaleY = containerHeight / imageHeight;
 		const fitScale = Math.min(scaleX, scaleY);
 
-		// 初期表示は全体が映るスケール、最小スケールはその半分まで縮小可能に
-		this.minScale = Math.min(fitScale * 0.5, 0.5);
-		this.scale = fitScale;
+		// 全体表示はコンテナにぴったりではなく、わずかに余白を持たせる（見切れ防止）
+		const viewScale = fitScale * 0.97;
+		// 縮小は全体表示から少し余白が見えるところまで、拡大は全体表示の8倍まで
+		this.minScale = fitScale * 0.94;
+		this.maxScale = fitScale * 8;
+		this.scale = viewScale;
 
 		// 画像を中央に配置（CSSのleft:50%, top:50%に対応してオフセット）
 		// 画像の中心をコンテナの中心に合わせる
@@ -1072,7 +1093,10 @@ const MapViewer = {
 	 */
 	updateTransform() {
 		if (this.image) {
-			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+			// scale()での拡大はラスタライズされてぼやけるため、width/heightを直接変更して拡大する
+			this.image.style.width = `${this.image.naturalWidth * this.scale}px`;
+			this.image.style.height = `${this.image.naturalHeight * this.scale}px`;
+			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px)`;
 		}
 	},
 
@@ -1235,15 +1259,10 @@ const MapViewer = {
 		if (imageWidth <= containerWidth) {
 			this.translateX = -imageWidth / 2;
 		} else {
-			// 左端がコンテナ右端を超えないよう制限 (画像左端 < containerWidth)
-			// halfContainerW + translateX < containerWidth → translateX < halfContainerW
-			// でも画像の一部は見えていてほしいので、画像右端がコンテナ左端より右にある必要
-			// halfContainerW + translateX + imageWidth > 0 → translateX > -halfContainerW - imageWidth
-
-			// 画像右端がコンテナ左端より右
-			const minX = -halfContainerW - imageWidth + 50; // 50pxは最低限見える範囲
-			// 画像左端がコンテナ右端より左
-			const maxX = halfContainerW - 50;
+			// 画像右端がコンテナ左端まで動かせる（右端も画面内に表示可能）
+			const minX = -halfContainerW - imageWidth;
+			// 画像左端がコンテナ右端まで動かせる（左端も画面内に表示可能）
+			const maxX = halfContainerW;
 
 			this.translateX = Math.max(minX, Math.min(maxX, this.translateX));
 		}
@@ -1251,8 +1270,8 @@ const MapViewer = {
 		if (imageHeight <= containerHeight) {
 			this.translateY = -imageHeight / 2;
 		} else {
-			const minY = -halfContainerH - imageHeight + 50;
-			const maxY = halfContainerH - 50;
+			const minY = -halfContainerH - imageHeight;
+			const maxY = halfContainerH;
 
 			this.translateY = Math.max(minY, Math.min(maxY, this.translateY));
 		}
