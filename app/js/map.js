@@ -24,6 +24,15 @@ const MapViewer = {
 	dragStartX: 0,
 	dragStartY: 0,
 
+	// 慣性スクロール（指を離した後の滑り）用
+	velocityX: 0,
+	velocityY: 0,
+	lastMoveX: 0,
+	lastMoveY: 0,
+	lastMoveTime: 0,
+	inertiaAnimFrame: null,
+	isInertiaRunning: false,
+
 	// マップ画像パス
 	maps: {
 		east123: '/maps/map_east123.svg',
@@ -77,7 +86,8 @@ const MapViewer = {
 		// タッチイベント
 		this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
 		this.container.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
-		this.container.addEventListener('touchend', () => this.onDragEnd());
+		this.container.addEventListener('touchend', (e) => this.onTouchEnd(e));
+		this.container.addEventListener('touchcancel', () => this.onDragEnd());
 
 		// マップ選択
 		const mapSelect = document.getElementById('mapSelect');
@@ -940,6 +950,7 @@ const MapViewer = {
 	},
 
 	async setImage(src) {
+		this.stopInertia();
 		if (!this.image) return;
 		// SVGマップはインライン表示してズーム時の解像度を維持する
 		if (/\.svg(\?|$)/.test(src)) {
@@ -1046,6 +1057,7 @@ const MapViewer = {
 	 * コンテナに収まるようにスケールを計算
 	 */
 	fitToContainer() {
+		this.stopInertia();
 		if (!this.container || !this.image) return;
 
 		const containerWidth = this.container.clientWidth;
@@ -1104,6 +1116,7 @@ const MapViewer = {
 	 * ドラッグ開始
 	 */
 	onDragStart(e) {
+		this.stopInertia();
 		this.isDragging = true;
 		this.dragStartX = e.clientX;
 		this.dragStartY = e.clientY;
@@ -1131,6 +1144,81 @@ const MapViewer = {
 	},
 
 	/**
+	 * タッチ終了：速度が残っていれば慣性スクロールを開始
+	 */
+	onTouchEnd(e) {
+		const wasDragging = this.isDragging;
+		this.onDragEnd();
+
+		// ピンチ操作の終了では慣性を開始しない
+		if (!wasDragging || e.changedTouches.length !== 1) return;
+
+		// 指を離す前に止めていた時間が長いほど速度を減衰
+		if (this.lastMoveTime > 0) {
+			const elapsed = e.timeStamp - this.lastMoveTime;
+			if (elapsed > 50) {
+				const decay = 0.9 ** (elapsed / 16);
+				this.velocityX *= decay;
+				this.velocityY *= decay;
+			}
+		}
+
+		if (Math.hypot(this.velocityX, this.velocityY) >= 0.05) {
+			this.startInertia();
+		}
+	},
+
+	/**
+	 * 慣性スクロール開始（ブラウザスクロールのような摩擦減衰で滑る）
+	 */
+	startInertia() {
+		this.stopInertia();
+		this.isInertiaRunning = true;
+		let lastFrameTime = 0;
+
+		const step = (now) => {
+			if (!this.isInertiaRunning) return;
+			// フレーム間隔（タブ切り替え等で間隔が空いた場合は上限で制限）
+			const dt = lastFrameTime ? Math.min(now - lastFrameTime, 32) : 16;
+			lastFrameTime = now;
+
+			this.translateX += this.velocityX * dt;
+			this.translateY += this.velocityY * dt;
+
+			// 端に到達したらその方向の速度をゼロにして停止
+			const { clampedX, clampedY } = this.constrainPosition();
+			if (clampedX) this.velocityX = 0;
+			if (clampedY) this.velocityY = 0;
+
+			this.updateTransform();
+
+			// フレームレート非依存の減衰（16msあたり0.92倍）
+			const decay = 0.92 ** (dt / 16);
+			this.velocityX *= decay;
+			this.velocityY *= decay;
+
+			if (Math.hypot(this.velocityX, this.velocityY) < 0.02) {
+				this.stopInertia();
+				return;
+			}
+			this.inertiaAnimFrame = requestAnimationFrame(step);
+		};
+
+		this.inertiaAnimFrame = requestAnimationFrame(step);
+	},
+
+	/**
+	 * 慣性スクロール停止
+	 */
+	stopInertia() {
+		this.isInertiaRunning = false;
+		if (this.inertiaAnimFrame) {
+			cancelAnimationFrame(this.inertiaAnimFrame);
+			this.inertiaAnimFrame = null;
+		}
+	},
+
+	/**
 	 * マウスホイール
 	 */
 	onWheel(e) {
@@ -1143,6 +1231,11 @@ const MapViewer = {
 	 * タッチ開始
 	 */
 	onTouchStart(e) {
+		this.stopInertia();
+		this.velocityX = 0;
+		this.velocityY = 0;
+		this.lastMoveTime = 0;
+
 		if (e.touches.length === 1) {
 			// シングルタッチ：ドラッグ
 			this.isDragging = true;
@@ -1150,6 +1243,9 @@ const MapViewer = {
 			this.dragStartY = e.touches[0].clientY;
 			this.startX = e.touches[0].clientX - this.translateX;
 			this.startY = e.touches[0].clientY - this.translateY;
+			// 慣性速度の計測開始位置を記録
+			this.lastMoveX = e.touches[0].clientX;
+			this.lastMoveY = e.touches[0].clientY;
 		} else if (e.touches.length === 2) {
 			// ダブルタッチ：ピンチズーム + 移動
 			this.isDragging = false;
@@ -1168,8 +1264,25 @@ const MapViewer = {
 
 		if (e.touches.length === 1 && this.isDragging) {
 			// ドラッグ
-			this.translateX = e.touches[0].clientX - this.startX;
-			this.translateY = e.touches[0].clientY - this.startY;
+			const x = e.touches[0].clientX;
+			const y = e.touches[0].clientY;
+			const now = e.timeStamp;
+
+			// 直前の移動量から速度を計測（イベント間隔が異常に長い場合は無視）
+			if (this.lastMoveTime > 0 && now > this.lastMoveTime && now - this.lastMoveTime < 100) {
+				const dt = now - this.lastMoveTime;
+				const vx = (x - this.lastMoveX) / dt;
+				const vy = (y - this.lastMoveY) / dt;
+				// 指数平滑化で指のジッターによる速度ブレを抑える
+				this.velocityX = this.velocityX * 0.7 + vx * 0.3;
+				this.velocityY = this.velocityY * 0.7 + vy * 0.3;
+			}
+			this.lastMoveX = x;
+			this.lastMoveY = y;
+			this.lastMoveTime = now;
+
+			this.translateX = x - this.startX;
+			this.translateY = y - this.startY;
 			this.constrainPosition();
 			this.updateTransform();
 		} else if (e.touches.length === 2) {
@@ -1211,6 +1324,7 @@ const MapViewer = {
 	 * ズーム（カーソル/ピンチ位置を中心に拡大縮小）
 	 */
 	zoom(delta, centerX, centerY) {
+		this.stopInertia();
 		const rect = this.container.getBoundingClientRect();
 
 		// コンテナ中央からの相対座標（CSSでleft:50%, top:50%を使用しているため）
@@ -1240,9 +1354,10 @@ const MapViewer = {
 
 	/**
 	 * 画像が画面外にはみ出さないよう位置を制限
+	 * @returns {{clampedX: boolean, clampedY: boolean}} 各軸でクランプされたか
 	 */
 	constrainPosition() {
-		if (!this.container || !this.image) return;
+		if (!this.container || !this.image) return { clampedX: false, clampedY: false };
 
 		const containerWidth = this.container.clientWidth;
 		const containerHeight = this.container.clientHeight;
@@ -1255,25 +1370,34 @@ const MapViewer = {
 		const halfContainerW = containerWidth / 2;
 		const halfContainerH = containerHeight / 2;
 
+		let clampedX = false;
+		let clampedY = false;
+
 		// 画像が画面より小さい場合は中央寄せ
 		if (imageWidth <= containerWidth) {
+			clampedX = this.translateX !== -imageWidth / 2;
 			this.translateX = -imageWidth / 2;
 		} else {
 			// 画像右端がコンテナ左端まで動かせる（右端も画面内に表示可能）
 			const minX = -halfContainerW - imageWidth;
 			// 画像左端がコンテナ右端まで動かせる（左端も画面内に表示可能）
 			const maxX = halfContainerW;
-
-			this.translateX = Math.max(minX, Math.min(maxX, this.translateX));
+			const clamped = Math.max(minX, Math.min(maxX, this.translateX));
+			clampedX = clamped !== this.translateX;
+			this.translateX = clamped;
 		}
 
 		if (imageHeight <= containerHeight) {
+			clampedY = this.translateY !== -imageHeight / 2;
 			this.translateY = -imageHeight / 2;
 		} else {
 			const minY = -halfContainerH - imageHeight;
 			const maxY = halfContainerH;
-
-			this.translateY = Math.max(minY, Math.min(maxY, this.translateY));
+			const clamped = Math.max(minY, Math.min(maxY, this.translateY));
+			clampedY = clamped !== this.translateY;
+			this.translateY = clamped;
 		}
+
+		return { clampedX, clampedY };
 	},
 };
