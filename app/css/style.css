@@ -432,69 +432,70 @@ body:has(#tab-list.active) {
 /* サークルカード - シンプル */
 .circle-card {
 	position: relative;
+	overflow: visible;
 	background: var(--card);
 	border-radius: 8px;
 	padding: 12px;
-	/* border-top: 4px double var(--priority-medium);
-	border-bottom: 4px double var(--priority-medium); */
 	cursor: pointer;
+}
+
+.circle-card.checked {
+	background: #f1f3f4;
 }
 
 .circle-card:active {
 	background: #f1f3f4;
 }
 
-/* .circle-card.priority-high {
-	border-left-color: var(--priority-high);
+.circle-card.checked .circle-name {
+	text-decoration: line-through;
+	color: var(--text-secondary);
 }
 
-.circle-card.priority-medium {
-	border-left-color: var(--priority-medium);
+.circle-card.checked .circle-space {
+	filter: grayscale(1);
 }
 
-.circle-card.priority-low {
-	border-left-color: var(--priority-low);
-} */
-
-.circle-card-badge.priority-high {
-	background-color: var(--priority-high);
-}
-
-.circle-card-badge.priority-medium {
-	background-color: var(--priority-medium);
-}
-
-.circle-card-badge.priority-low {
-	background-color: var(--priority-low);
-}
-
-.circle-card.checked {
-	opacity: 0.5;
-}
-
+/* カード上部の行: [ドラッグハンドル] [スペースピル] [チェックボタン(右)] */
 .circle-header {
 	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
+	align-items: center;
 	gap: 8px;
-	margin-bottom: 6px;
+	margin-bottom: 8px;
 }
 
 .circle-name {
 	font-weight: 600;
 	font-size: 0.9375rem;
-	flex: 1;
 	word-break: break-word;
+	margin-bottom: 4px;
 }
 
 .circle-space {
 	background: #e8f0fe;
 	color: var(--primary-dark);
-	padding: 2px 8px;
+	padding: 5px 12px;
 	border-radius: 4px;
-	font-size: 0.75rem;
-	font-weight: 600;
+	font-size: 1rem;
+	font-weight: 700;
 	white-space: nowrap;
+	letter-spacing: 0.02em;
+	line-height: 1.2;
+}
+
+.space-priority-high {
+	background: #fce8e6;
+	color: #a50e0e;
+}
+
+.space-priority-medium {
+	background: #feefc3;
+	color: #b06000;
+}
+
+.space-priority-low {
+	background: #e6f4ea;
+	color: #1e8e3e;
 }
 
 .circle-info {
@@ -514,12 +515,38 @@ body:has(#tab-list.active) {
 	margin-top: 8px;
 }
 
-.circle-actions {
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
-	gap: 8px;
-	margin-top: 8px;
+.check-btn {
+	padding: 6px 14px;
+	border: none;
+	border-radius: 6px;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+	min-height: 32px;
+	line-height: 1.2;
+	margin-left: auto;
+	background: var(--text-secondary);
+	color: #fff;
+}
+
+.check-btn.priority-high {
+	background: var(--priority-high);
+	color: #fff;
+}
+
+.check-btn.priority-medium {
+	background: var(--priority-medium);
+	color: #5f4000;
+}
+
+.check-btn.priority-low {
+	background: var(--priority-low);
+	color: #fff;
+}
+
+.check-btn.checked {
+	background: var(--text-secondary);
+	color: #fff;
 }
 
 /* コンパクトモード */
@@ -536,16 +563,22 @@ body:has(#tab-list.active) {
 	align-items: center;
 	gap: 8px;
 	margin-bottom: 0;
+	min-width: 0;
 }
 
 .circle-list.compact .circle-name {
 	flex: 1;
 	font-size: 0.875rem;
+	margin-bottom: 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .circle-list.compact .circle-space {
-	font-size: 0.6875rem;
-	padding: 1px 6px;
+	font-size: 0.8125rem;
+	padding: 3px 8px;
 }
 
 .circle-list.compact .circle-info,
@@ -554,30 +587,11 @@ body:has(#tab-list.active) {
 	display: none;
 }
 
-.circle-list.compact .circle-actions {
-	margin-top: 0;
-}
-
 .circle-list.compact .check-btn {
-	padding: 4px 8px;
+	padding: 4px 10px;
 	min-height: 28px;
 	font-size: 0.75rem;
-}
-
-.check-btn {
-	padding: 8px 16px;
-	border: none;
-	border-radius: 6px;
-	font-size: 0.8125rem;
-	font-weight: 500;
-	cursor: pointer;
-	background: var(--success);
-	color: #fff;
-	min-height: 36px;
-}
-
-.check-btn.checked {
-	background: var(--text-secondary);
+	margin-left: 0;
 }
 
 /* マップ */
@@ -1485,27 +1499,19 @@ input:checked + .toggle-slider:before {
 		min-width: 120px;
 	}
 
-	/* カードリストの改善 */
+	/* カードリストの改善（シングルカラム） */
 	.circle-list {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-		gap: 12px;
-		max-width: 1000px; /* main 全幅表示時もカードは従来の中央幅に保つ */
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		max-width: 600px;
 		margin: 0 auto;
-	}
-
-	.circle-list.compact {
-		grid-template-columns: 1fr 1fr;
 	}
 }
 
 @media (min-width: 1200px) {
 	main {
 		max-width: 1000px;
-	}
-
-	.circle-list {
-		grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
 	}
 }
 

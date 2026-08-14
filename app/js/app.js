@@ -701,33 +701,31 @@ const App = {
 	createCircleCard(circle) {
 		const dayLabel = circle.day === '1' ? '1日目' : '2日目';
 		const priorityClass = `priority-${circle.priority}`;
+		const spacePriorityClass = `space-priority-${circle.priority}`;
 		const checkedClass = circle.checked ? 'checked' : '';
-		const checkBtnClass = circle.checked ? 'check-btn checked' : 'check-btn';
+		const checkBtnClass = circle.checked
+			? `check-btn ${priorityClass} checked`
+			: `check-btn ${priorityClass}`;
 		const checkIcon = circle.checked
 			? '<svg class="icon icon-sm"><use href="#icon-check"/></svg>'
 			: '<svg class="icon icon-sm"><use href="#icon-pending"/></svg>';
 		const checkBtnText = circle.checked ? '済' : '未';
 
 		return `
-            <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
-								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
-									<span class="visually-hidden">New alerts</span>
-								</span>
+            <div class="circle-card ${checkedClass}" data-id="${circle.id}">
                 <div class="circle-header">
 									<button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">
 										<svg class="icon" style="width: 16px; height: 16px;"><use href="#icon-move" /></svg>
 									</button>
-									<span class="circle-name">${this.escapeHtml(circle.name)}</span>
-									<span class="circle-space">${this.escapeHtml(circle.space)}</span>
+									<span class="circle-space ${spacePriorityClass}">${this.escapeHtml(circle.space)}</span>
+									<button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
                 </div>
+                <div class="circle-name">${this.escapeHtml(circle.name)}</div>
                 <div class="circle-info">
                     <span><svg class="icon icon-sm"><use href="#icon-event"/></svg> ${dayLabel}</span>
                     ${circle.genre ? `<span><svg class="icon icon-sm"><use href="#icon-folder"/></svg> ${this.escapeHtml(circle.genre)}</span>` : ''}
                 </div>
                 ${circle.memo ? `<div class="circle-memo">${this.escapeHtml(circle.memo)}</div>` : ''}
-                <div class="circle-actions">
-                    <button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
-                </div>
             </div>
         `;
 	},
@@ -737,24 +735,22 @@ const App = {
 	 */
 	createCompactCircleCard(circle) {
 		const priorityClass = `priority-${circle.priority}`;
+		const spacePriorityClass = `space-priority-${circle.priority}`;
 		const checkedClass = circle.checked ? 'checked' : '';
-		const checkBtnClass = circle.checked ? 'check-btn checked' : 'check-btn';
+		const checkBtnClass = circle.checked
+			? `check-btn ${priorityClass} checked`
+			: `check-btn ${priorityClass}`;
 		const checkIcon = circle.checked
 			? '<svg class="icon icon-sm"><use href="#icon-check"/></svg>'
 			: '<svg class="icon icon-sm"><use href="#icon-pending"/></svg>';
 		const checkBtnText = circle.checked ? '済' : '未';
 
 		return `
-            <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
-								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
-									<span class="visually-hidden">New alerts</span>
-								</span>
-                <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
+            <div class="circle-card ${checkedClass}" data-id="${circle.id}">
                 <div class="circle-header">
+                    <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
+                    <span class="circle-space ${spacePriorityClass}">${this.escapeHtml(circle.space)}</span>
                     <span class="circle-name">${this.escapeHtml(circle.name)}</span>
-                    <span class="circle-space">${this.escapeHtml(circle.space)}</span>
-                </div>
-                <div class="circle-actions">
                     <button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
                 </div>
             </div>
