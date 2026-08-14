@@ -6,9 +6,8 @@ node_modules/
 
 maps/
 
-
-*.md
-!README.md
+# 生成済みのアプリ用マップ（SVG）はコミット対象
+!app/maps/
 
 # playwright
 .playwright
@@ -45,3 +44,41 @@ npm-debug.log*
 app/js/config.js
 
 .omo/
+
+# 解析用の一時ファイル（コミット対象外）
+docs/pdf_svg/
+docs/pdf_halls/
+docs/pdf_zoom/
+docs/pdf_pages/
+docs/pdf_hi/
+docs/pdf_split/
+docs/pdf_headers/
+docs/C108Map_all_B4.pdf
+docs/C108Map_all_B4.txt
+docs/ocr*.txt
+docs/render/
+docs/verify_*.png
+docs/qa_*.png
+docs/debug_*.png
+docs/check_*.png
+docs/E7_v*.png
+docs/E7_numbered.png
+
+# 未最適化のInkscape出力（巨大な作業中ファイル）
+docs/inkscape/CircleMap.svg
+docs/inkscape/CircleMap_E7.svg
+docs/inkscape/CircleMap_plain.svg
+docs/inkscape/E7_plain.svg
+docs/inkscape/E7_plain_layer_5.svg
+docs/inkscape/E7_plain_layer-2_5.svg
+docs/inkscape/E7_plain_layer_*.svg
+docs/inkscape/E7_scoured.svg
+docs/inkscape/E7_rectified.svg
+docs/inkscape/E7_optimized.svg
+docs/inkscape/E7_min.svg
+docs/inkscape/E7_min.png
+docs/inkscape/E7_layer25_final.png
+docs/inkscape/E7_layer25_numbered.svg
+docs/inkscape/*.png
+
+out/

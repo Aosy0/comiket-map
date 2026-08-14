@@ -7,7 +7,7 @@ const MapViewer = {
 	image: null,
 	scale: 1,
 	minScale: 0.5,
-	maxScale: 4,
+	maxScale: 10,
 	translateX: 0,
 	translateY: 0,
 	isDragging: false,
@@ -17,16 +17,40 @@ const MapViewer = {
 	lastPinchCenterX: 0,
 	lastPinchCenterY: 0,
 
+	// 東7サークル色付け（SVG内のrectを直接塗りつぶす）
+	circleColors: {}, // { '東7-A-1': '#fde047' } の色マップ
+	circleStorageKey: Storage.KEYS.CIRCLE_COLORS,
+	circlePalette: ['#fde047', '#86efac', '#93c5fd', '#fca5a5'], // 黄→緑→青→赤→解除
+	dragStartX: 0,
+	dragStartY: 0,
+
+	// 慣性スクロール（指を離した後の滑り）用
+	velocityX: 0,
+	velocityY: 0,
+	lastMoveX: 0,
+	lastMoveY: 0,
+	lastMoveTime: 0,
+	inertiaAnimFrame: null,
+	isInertiaRunning: false,
+
 	// マップ画像パス
 	maps: {
-		e456: '/maps/map_east456.svg',
-		e78: '/maps/map_east78.svg',
-		w: '/maps/map_west.svg',
-		s: '/maps/map_south.svg',
+		east123: '/maps/map_east123.svg',
+		east7: '/maps/map_east7.svg',
+		west12: '/maps/map_west12.svg',
+		south12: '/maps/map_south12.svg',
+		overview: '/maps/map_overview.svg',
+	},
+	// 開発環境ではキャッシュを無効化して最新のマップを読み込む
+	mapUrl(mapKey) {
+		const base = this.maps[mapKey];
+		if (!base) return base;
+		const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+		return isDev ? `${base}?v=${Date.now()}` : base;
 	},
 
 	// 現在表示中のマップキー
-	currentMapKey: 'e456',
+	currentMapKey: 'east123',
 
 	// ページ関連プロパティ
 	currentPage: 1,
@@ -41,9 +65,10 @@ const MapViewer = {
 
 		if (!this.container || !this.image) return;
 
+		this.loadCircleColors();
 		this.bindEvents();
 		this.initModalEvents();
-		this.loadMap('e456');
+		this.loadMap('east123');
 	},
 
 	/**
@@ -55,12 +80,14 @@ const MapViewer = {
 		this.container.addEventListener('mousemove', (e) => this.onDragMove(e));
 		this.container.addEventListener('mouseup', () => this.onDragEnd());
 		this.container.addEventListener('mouseleave', () => this.onDragEnd());
+		this.container.addEventListener('click', (e) => this.onCircleClick(e));
 		this.container.addEventListener('wheel', (e) => this.onWheel(e));
 
 		// タッチイベント
 		this.container.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
 		this.container.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
-		this.container.addEventListener('touchend', () => this.onDragEnd());
+		this.container.addEventListener('touchend', (e) => this.onTouchEnd(e));
+		this.container.addEventListener('touchcancel', () => this.onDragEnd());
 
 		// マップ選択
 		const mapSelect = document.getElementById('mapSelect');
@@ -91,6 +118,13 @@ const MapViewer = {
 		if (customBtn) {
 			customBtn.addEventListener('click', () => this.openModal());
 		}
+
+		// ウィンドウリサイズ時にフィット（連続リサイズ対策で遅延実行）
+		let resizeTimer = null;
+		window.addEventListener('resize', () => {
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => this.fitToContainer(), 200);
+		});
 	},
 
 	/**
@@ -175,10 +209,10 @@ const MapViewer = {
 
 	// 公式PDF用のエリアマッピング（ページ番号 -> エリアキー）
 	officialPDFMapping: {
-		1: { key: 'e456', name: '東4-6ホール' },
-		2: { key: 'e78', name: '東7-8ホール' },
-		3: { key: 's', name: '南1-4ホール' },
-		4: { key: 'w', name: '西1-4ホール' },
+		1: { key: 'east123', name: '東1-3ホール' },
+		2: { key: 'east7', name: '東7ホール' },
+		3: { key: 'west12', name: '西1-2ホール' },
+		4: { key: 'south12', name: '南1-2ホール' },
 	},
 
 	/**
@@ -308,10 +342,10 @@ const MapViewer = {
 
 		// 利用可能なエリアオプション
 		const areaOptions = [
-			{ key: 'e456', name: '東4-6ホール' },
-			{ key: 'e78', name: '東7-8ホール' },
-			{ key: 's', name: '南1-4ホール' },
-			{ key: 'w', name: '西1-4ホール' },
+			{ key: 'east123', name: '東1-3ホール' },
+			{ key: 'east7', name: '東7ホール' },
+			{ key: 'west12', name: '西1-2ホール' },
+			{ key: 'south12', name: '南1-2ホール' },
 			{ key: '', name: '（スキップ）' },
 		];
 
@@ -665,9 +699,14 @@ const MapViewer = {
 		// 2. なければデフォルトSVG
 		this.updatePageSelector();
 		this.updateDeleteButton(hasCustomMap);
-		const defaultSrc = this.maps[mapKey];
+		const defaultSrc = this.mapUrl(mapKey);
 		if (defaultSrc) {
-			this.setImage(defaultSrc);
+			await this.setImage(defaultSrc);
+
+			// 東7のみサークルタップ色付けを有効化
+			if (mapKey === 'east7') {
+				await this.setupEast7Overlay();
+			}
 
 			// 初回表示時の案内
 			if (!localStorage.getItem('usage_guide_shown')) {
@@ -690,6 +729,152 @@ const MapViewer = {
 			} else {
 				deleteBtn.classList.add('hidden');
 			}
+		}
+	},
+
+	/**
+	 * 点 (x, y) に祖先チェーンの transform を SVG 仕様通りに適用して絶対座標を返す。
+	 * translate / rotate / matrix に対応。戻り値は [x, y, rotateAngle]。
+	 */
+	applyTransformToPoint(el, x, y) {
+		let angle = 0;
+		const chain = [];
+		let node = el;
+		while (node?.getAttribute) {
+			chain.push(node);
+			node = node.parentNode;
+		}
+		// 要素自身の transform から祖先の順に適用（SVG: 点は自身→親→祖父母の順で変換）
+		for (let i = 0; i < chain.length; i++) {
+			const t = chain[i].getAttribute('transform');
+			if (!t) continue;
+			const ops = [];
+			const re = /(translate|rotate|matrix)\(([^)]*)\)/g;
+			let m;
+			while ((m = re.exec(t)) !== null) {
+				ops.push([m[1], m[2]]);
+			}
+			// 同じ transform 内の操作は右から左に適用（transform="A B" は B を先に適用）
+			for (let k = ops.length - 1; k >= 0; k--) {
+				const [kind, argsStr] = ops[k];
+				const args = argsStr
+					.split(/[\s,]+/)
+					.map(Number)
+					.filter((n) => !Number.isNaN(n));
+				if (kind === 'translate') {
+					x += args[0];
+					y += args[1] || 0;
+				} else if (kind === 'rotate') {
+					angle += args[0];
+					const rad = (args[0] * Math.PI) / 180;
+					if (args.length >= 3) {
+						const cx = args[1];
+						const cy = args[2];
+						x -= cx;
+						y -= cy;
+						const nx = x * Math.cos(rad) - y * Math.sin(rad);
+						const ny = x * Math.sin(rad) + y * Math.cos(rad);
+						x = nx + cx;
+						y = ny + cy;
+					} else {
+						const nx = x * Math.cos(rad) - y * Math.sin(rad);
+						const ny = x * Math.sin(rad) + y * Math.cos(rad);
+						x = nx;
+						y = ny;
+					}
+				} else if (kind === 'matrix') {
+					const a = args[0],
+						b = args[1],
+						c = args[2],
+						d = args[3],
+						e = args[4],
+						f = args[5];
+					const nx = a * x + c * y + e;
+					const ny = b * x + d * y + f;
+					x = nx;
+					y = ny;
+				}
+			}
+		}
+		return [x, y, angle];
+	},
+
+	/**
+	 * 東7のサークルrectを直接操作（オーバーレイを使わずSVG内を直接塗りつぶす）
+	 */
+	async setupEast7Overlay() {
+		if (this.currentMapKey !== 'east7') return;
+		// インラインSVG読み込み済みの場合のみ直接バインド
+		if (this.image && this.image.tagName === 'svg') {
+			this.bindCircleRects();
+			return;
+		}
+		// <img> の場合は読み込み完了を待ってバインド
+		if (this.image && this.image.tagName === 'IMG') {
+			if (this.image.complete) {
+				this.bindCircleRects();
+			} else {
+				this.image.addEventListener('load', () => this.bindCircleRects(), { once: true });
+			}
+		}
+	},
+
+	/**
+	 * サークルセルのクリック/タップ処理（ドラッグ判定後に色を切り替える）
+	 */
+	onCircleClick(e) {
+		const target = e.target;
+		if (!target || !target.hasAttribute || !target.hasAttribute('data-circle')) return;
+		const dx = Math.abs(e.clientX - this.dragStartX);
+		const dy = Math.abs(e.clientY - this.dragStartY);
+		if (dx > 10 || dy > 10) return;
+		this.cycleCircleColor(target);
+	},
+
+	/**
+	 * 色をサイクルで切り替え（最後は解除）
+	 */
+	cycleCircleColor(rect) {
+		const id = rect.getAttribute('data-circle');
+		const current = this.circleColors[id];
+		const idx = current ? this.circlePalette.indexOf(current) : -1;
+		let next;
+		if (idx === -1) {
+			next = this.circlePalette[0];
+		} else if (idx >= this.circlePalette.length - 1) {
+			next = null;
+		} else {
+			next = this.circlePalette[idx + 1];
+		}
+		if (next) {
+			this.circleColors[id] = next;
+			rect.style.fill = next;
+		} else {
+			delete this.circleColors[id];
+			rect.style.fill = 'transparent';
+		}
+		this.saveCircleColors();
+	},
+
+	/**
+	 * 保存済みの色を読み込み
+	 */
+	loadCircleColors() {
+		try {
+			this.circleColors = JSON.parse(localStorage.getItem(this.circleStorageKey) || '{}');
+		} catch (e) {
+			this.circleColors = {};
+		}
+	},
+
+	/**
+	 * 色を保存
+	 */
+	saveCircleColors() {
+		try {
+			localStorage.setItem(this.circleStorageKey, JSON.stringify(this.circleColors));
+		} catch (e) {
+			console.error('[MapViewer] failed to save circle colors:', e);
 		}
 	},
 
@@ -764,11 +949,93 @@ const MapViewer = {
 		}
 	},
 
-	setImage(src) {
-		if (this.image) {
-			this.image.onload = () => this.fitToContainer();
-			this.image.src = src;
+	async setImage(src) {
+		this.stopInertia();
+		if (!this.image) return;
+		// SVGマップはインライン表示してズーム時の解像度を維持する
+		if (/\.svg(\?|$)/.test(src)) {
+			await this.loadInlineSvg(src);
+			return;
 		}
+		this.image.onload = () => this.fitToContainer();
+		this.image.src = src;
+	},
+
+	/**
+	 * SVGをfetchしてインライン要素として表示（ラスタライズせずベクターのまま）
+	 */
+	async loadInlineSvg(src) {
+		try {
+			const res = await fetch(src);
+			if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+			const text = await res.text();
+			const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+			const svgEl = doc.documentElement;
+			// 既存の img を置き換え
+			const old = this.image;
+			this.image = svgEl;
+			this.image.classList.add('map-image');
+			this.image.style.position = 'absolute';
+			this.image.style.left = '50%';
+			this.image.style.top = '50%';
+			this.image.style.transformOrigin = '0 0';
+			// naturalWidth/naturalHeight 互換プロパティを設定
+			const vb = (svgEl.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+			this.image.naturalWidth = vb[2] || 199.58;
+			this.image.naturalHeight = vb[3] || 198.03;
+			// width/height 属性を viewBox に合わせて設定（CSSのmax-width影響で二重拡大されるのを防ぐ）
+			this.image.setAttribute('width', this.image.naturalWidth);
+			this.image.setAttribute('height', this.image.naturalHeight);
+			// width/height を直接変更して拡大するため、max-width制限を無効化
+			this.image.style.maxWidth = 'none';
+			old.replaceWith(this.image);
+			this.fitToContainer();
+		} catch (e) {
+			console.error('[MapViewer] inline SVG load failed:', e);
+			this.image.src = src;
+			this.image.onload = () => this.fitToContainer();
+		}
+	},
+
+	/**
+	 * インラインSVG内のサークルrectにクリック処理を直接バインドし、保存済み色を復元する
+	 */
+	bindCircleRects() {
+		if (!this.image) return;
+		const svg = this.image;
+		// 番号テキストがクリックを横取りしないよう透過する
+		svg.querySelectorAll('text').forEach((t) => {
+			t.style.pointerEvents = 'none';
+		});
+		const rects = svg.querySelectorAll('rect[data-circle]');
+		rects.forEach((rect) => {
+			const id = rect.getAttribute('data-circle');
+			// 透明でもクリック可能にする
+			rect.style.pointerEvents = 'all';
+			rect.style.cursor = 'pointer';
+			const color = this.circleColors[id];
+			if (color) {
+				rect.style.fill = color;
+				rect.setAttribute('fill-opacity', '0.6');
+			} else {
+				rect.style.fill = 'transparent';
+			}
+			if (!rect._circleBound) {
+				rect.addEventListener('click', (e) => this.onCircleRectClick(e, rect));
+				rect._circleBound = true;
+			}
+		});
+	},
+
+	/**
+	 * サークルrectを直接クリックしたときの処理
+	 */
+	onCircleRectClick(e, rect) {
+		const dx = Math.abs(e.clientX - this.dragStartX);
+		const dy = Math.abs(e.clientY - this.dragStartY);
+		if (dx > 10 || dy > 10) return;
+		e.stopPropagation();
+		this.cycleCircleColor(rect);
 	},
 
 	showToast(msg, duration = 3000) {
@@ -790,12 +1057,19 @@ const MapViewer = {
 	 * コンテナに収まるようにスケールを計算
 	 */
 	fitToContainer() {
+		this.stopInertia();
 		if (!this.container || !this.image) return;
 
 		const containerWidth = this.container.clientWidth;
 		const containerHeight = this.container.clientHeight;
 		const imageWidth = this.image.naturalWidth;
 		const imageHeight = this.image.naturalHeight;
+
+		// マップタブが非アクティブでコンテナサイズが0の場合は、表示後に再試行
+		if (containerWidth === 0 || containerHeight === 0) {
+			requestAnimationFrame(() => this.fitToContainer());
+			return;
+		}
 
 		if (imageWidth === 0 || imageHeight === 0) return;
 
@@ -804,9 +1078,12 @@ const MapViewer = {
 		const scaleY = containerHeight / imageHeight;
 		const fitScale = Math.min(scaleX, scaleY);
 
-		// 最小スケールを全体表示サイズに設定（これより小さくならない）
-		this.minScale = fitScale;
-		this.scale = fitScale;
+		// 全体表示はコンテナにぴったりではなく、わずかに余白を持たせる（見切れ防止）
+		const viewScale = fitScale * 0.97;
+		// 縮小は全体表示から少し余白が見えるところまで、拡大は全体表示の8倍まで
+		this.minScale = fitScale * 0.94;
+		this.maxScale = fitScale * 8;
+		this.scale = viewScale;
 
 		// 画像を中央に配置（CSSのleft:50%, top:50%に対応してオフセット）
 		// 画像の中心をコンテナの中心に合わせる
@@ -828,7 +1105,10 @@ const MapViewer = {
 	 */
 	updateTransform() {
 		if (this.image) {
-			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+			// scale()での拡大はラスタライズされてぼやけるため、width/heightを直接変更して拡大する
+			this.image.style.width = `${this.image.naturalWidth * this.scale}px`;
+			this.image.style.height = `${this.image.naturalHeight * this.scale}px`;
+			this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px)`;
 		}
 	},
 
@@ -836,7 +1116,10 @@ const MapViewer = {
 	 * ドラッグ開始
 	 */
 	onDragStart(e) {
+		this.stopInertia();
 		this.isDragging = true;
+		this.dragStartX = e.clientX;
+		this.dragStartY = e.clientY;
 		this.startX = e.clientX - this.translateX;
 		this.startY = e.clientY - this.translateY;
 	},
@@ -861,6 +1144,81 @@ const MapViewer = {
 	},
 
 	/**
+	 * タッチ終了：速度が残っていれば慣性スクロールを開始
+	 */
+	onTouchEnd(e) {
+		const wasDragging = this.isDragging;
+		this.onDragEnd();
+
+		// ピンチ操作の終了では慣性を開始しない
+		if (!wasDragging || e.changedTouches.length !== 1) return;
+
+		// 指を離す前に止めていた時間が長いほど速度を減衰
+		if (this.lastMoveTime > 0) {
+			const elapsed = e.timeStamp - this.lastMoveTime;
+			if (elapsed > 50) {
+				const decay = 0.9 ** (elapsed / 16);
+				this.velocityX *= decay;
+				this.velocityY *= decay;
+			}
+		}
+
+		if (Math.hypot(this.velocityX, this.velocityY) >= 0.05) {
+			this.startInertia();
+		}
+	},
+
+	/**
+	 * 慣性スクロール開始（ブラウザスクロールのような摩擦減衰で滑る）
+	 */
+	startInertia() {
+		this.stopInertia();
+		this.isInertiaRunning = true;
+		let lastFrameTime = 0;
+
+		const step = (now) => {
+			if (!this.isInertiaRunning) return;
+			// フレーム間隔（タブ切り替え等で間隔が空いた場合は上限で制限）
+			const dt = lastFrameTime ? Math.min(now - lastFrameTime, 32) : 16;
+			lastFrameTime = now;
+
+			this.translateX += this.velocityX * dt;
+			this.translateY += this.velocityY * dt;
+
+			// 端に到達したらその方向の速度をゼロにして停止
+			const { clampedX, clampedY } = this.constrainPosition();
+			if (clampedX) this.velocityX = 0;
+			if (clampedY) this.velocityY = 0;
+
+			this.updateTransform();
+
+			// フレームレート非依存の減衰（16msあたり0.92倍）
+			const decay = 0.92 ** (dt / 16);
+			this.velocityX *= decay;
+			this.velocityY *= decay;
+
+			if (Math.hypot(this.velocityX, this.velocityY) < 0.02) {
+				this.stopInertia();
+				return;
+			}
+			this.inertiaAnimFrame = requestAnimationFrame(step);
+		};
+
+		this.inertiaAnimFrame = requestAnimationFrame(step);
+	},
+
+	/**
+	 * 慣性スクロール停止
+	 */
+	stopInertia() {
+		this.isInertiaRunning = false;
+		if (this.inertiaAnimFrame) {
+			cancelAnimationFrame(this.inertiaAnimFrame);
+			this.inertiaAnimFrame = null;
+		}
+	},
+
+	/**
 	 * マウスホイール
 	 */
 	onWheel(e) {
@@ -873,11 +1231,21 @@ const MapViewer = {
 	 * タッチ開始
 	 */
 	onTouchStart(e) {
+		this.stopInertia();
+		this.velocityX = 0;
+		this.velocityY = 0;
+		this.lastMoveTime = 0;
+
 		if (e.touches.length === 1) {
 			// シングルタッチ：ドラッグ
 			this.isDragging = true;
+			this.dragStartX = e.touches[0].clientX;
+			this.dragStartY = e.touches[0].clientY;
 			this.startX = e.touches[0].clientX - this.translateX;
 			this.startY = e.touches[0].clientY - this.translateY;
+			// 慣性速度の計測開始位置を記録
+			this.lastMoveX = e.touches[0].clientX;
+			this.lastMoveY = e.touches[0].clientY;
 		} else if (e.touches.length === 2) {
 			// ダブルタッチ：ピンチズーム + 移動
 			this.isDragging = false;
@@ -896,8 +1264,25 @@ const MapViewer = {
 
 		if (e.touches.length === 1 && this.isDragging) {
 			// ドラッグ
-			this.translateX = e.touches[0].clientX - this.startX;
-			this.translateY = e.touches[0].clientY - this.startY;
+			const x = e.touches[0].clientX;
+			const y = e.touches[0].clientY;
+			const now = e.timeStamp;
+
+			// 直前の移動量から速度を計測（イベント間隔が異常に長い場合は無視）
+			if (this.lastMoveTime > 0 && now > this.lastMoveTime && now - this.lastMoveTime < 100) {
+				const dt = now - this.lastMoveTime;
+				const vx = (x - this.lastMoveX) / dt;
+				const vy = (y - this.lastMoveY) / dt;
+				// 指数平滑化で指のジッターによる速度ブレを抑える
+				this.velocityX = this.velocityX * 0.7 + vx * 0.3;
+				this.velocityY = this.velocityY * 0.7 + vy * 0.3;
+			}
+			this.lastMoveX = x;
+			this.lastMoveY = y;
+			this.lastMoveTime = now;
+
+			this.translateX = x - this.startX;
+			this.translateY = y - this.startY;
 			this.constrainPosition();
 			this.updateTransform();
 		} else if (e.touches.length === 2) {
@@ -939,6 +1324,7 @@ const MapViewer = {
 	 * ズーム（カーソル/ピンチ位置を中心に拡大縮小）
 	 */
 	zoom(delta, centerX, centerY) {
+		this.stopInertia();
 		const rect = this.container.getBoundingClientRect();
 
 		// コンテナ中央からの相対座標（CSSでleft:50%, top:50%を使用しているため）
@@ -968,9 +1354,10 @@ const MapViewer = {
 
 	/**
 	 * 画像が画面外にはみ出さないよう位置を制限
+	 * @returns {{clampedX: boolean, clampedY: boolean}} 各軸でクランプされたか
 	 */
 	constrainPosition() {
-		if (!this.container || !this.image) return;
+		if (!this.container || !this.image) return { clampedX: false, clampedY: false };
 
 		const containerWidth = this.container.clientWidth;
 		const containerHeight = this.container.clientHeight;
@@ -983,30 +1370,34 @@ const MapViewer = {
 		const halfContainerW = containerWidth / 2;
 		const halfContainerH = containerHeight / 2;
 
+		let clampedX = false;
+		let clampedY = false;
+
 		// 画像が画面より小さい場合は中央寄せ
 		if (imageWidth <= containerWidth) {
+			clampedX = this.translateX !== -imageWidth / 2;
 			this.translateX = -imageWidth / 2;
 		} else {
-			// 左端がコンテナ右端を超えないよう制限 (画像左端 < containerWidth)
-			// halfContainerW + translateX < containerWidth → translateX < halfContainerW
-			// でも画像の一部は見えていてほしいので、画像右端がコンテナ左端より右にある必要
-			// halfContainerW + translateX + imageWidth > 0 → translateX > -halfContainerW - imageWidth
-
-			// 画像右端がコンテナ左端より右
-			const minX = -halfContainerW - imageWidth + 50; // 50pxは最低限見える範囲
-			// 画像左端がコンテナ右端より左
-			const maxX = halfContainerW - 50;
-
-			this.translateX = Math.max(minX, Math.min(maxX, this.translateX));
+			// 画像右端がコンテナ左端まで動かせる（右端も画面内に表示可能）
+			const minX = -halfContainerW - imageWidth;
+			// 画像左端がコンテナ右端まで動かせる（左端も画面内に表示可能）
+			const maxX = halfContainerW;
+			const clamped = Math.max(minX, Math.min(maxX, this.translateX));
+			clampedX = clamped !== this.translateX;
+			this.translateX = clamped;
 		}
 
 		if (imageHeight <= containerHeight) {
+			clampedY = this.translateY !== -imageHeight / 2;
 			this.translateY = -imageHeight / 2;
 		} else {
-			const minY = -halfContainerH - imageHeight + 50;
-			const maxY = halfContainerH - 50;
-
-			this.translateY = Math.max(minY, Math.min(maxY, this.translateY));
+			const minY = -halfContainerH - imageHeight;
+			const maxY = halfContainerH;
+			const clamped = Math.max(minY, Math.min(maxY, this.translateY));
+			clampedY = clamped !== this.translateY;
+			this.translateY = clamped;
 		}
+
+		return { clampedX, clampedY };
 	},
 };

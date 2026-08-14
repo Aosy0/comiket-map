@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1600" viewBox="0 0 2400 1600">
+<defs>
+<style>
+  .bg { fill: #ffffff; }
+  .title { font-family: sans-serif; font-size: 52px; font-weight: bold; fill: #334155; }
+  .subtitle { font-family: sans-serif; font-size: 24px; fill: #475569; }
+  .hall { stroke: #64748b; stroke-width: 3; }
+  .hall-label { font-family: sans-serif; font-size: 30px; font-weight: bold; fill: #334155; text-anchor: middle; dominant-baseline: central; }
+  .island { fill: #ffffff; stroke: #94a3b8; stroke-width: 1; }
+  .island-label { font-family: sans-serif; font-size: 14px; fill: #475569; text-anchor: middle; dominant-baseline: central; }
+  .note { font-family: sans-serif; font-size: 18px; fill: #94a3b8; }
+</style>
+</defs>
+<rect class="bg" x="0" y="0" width="2400" height="1600" />
+<text class="title" x="30" y="70">C108 1日目 サークルマップ (東京ビッグサイト)</text>
+<text class="subtitle" x="30" y="110">開催日: 2026-08-15 (1日目)</text>
+<rect class="hall" fill="#e8f5e9" x="1350" y="250" width="950" height="480" rx="8" />
+<text class="hall-label" x="1825.0" y="290">東1-3</text>
+<rect class="island" x="1370.0" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1379.7" y="510.0">ス</text>
+<rect class="island" x="1393.4" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1403.2" y="510.0">シ</text>
+<rect class="island" x="1416.9" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1426.6" y="510.0">サ</text>
+<rect class="island" x="1440.3" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1450.0" y="510.0">コ</text>
+<rect class="island" x="1463.7" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1473.5" y="510.0">ケ</text>
+<rect class="island" x="1487.2" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1496.9" y="510.0">ク</text>
+<rect class="island" x="1510.6" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1520.3" y="510.0">キ</text>
+<rect class="island" x="1534.1" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1543.8" y="510.0">カ</text>
+<rect class="island" x="1557.5" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1567.2" y="510.0">オ</text>
+<rect class="island" x="1580.9" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1590.6" y="510.0">エ</text>
+<rect class="island" x="1604.4" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1614.1" y="510.0">ウ</text>
+<rect class="island" x="1627.8" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1637.5" y="510.0">イ</text>
+<rect class="island" x="1651.2" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1660.9" y="510.0">ア</text>
+<rect class="island" x="1674.7" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1684.4" y="510.0">ヒ</text>
+<rect class="island" x="1698.1" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1707.8" y="510.0">ハ</text>
+<rect class="island" x="1721.5" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1731.3" y="510.0">ノ</text>
+<rect class="island" x="1745.0" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1754.7" y="510.0">ネ</text>
+<rect class="island" x="1768.4" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1778.1" y="510.0">ヌ</text>
+<rect class="island" x="1791.8" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1801.6" y="510.0">ニ</text>
+<rect class="island" x="1815.3" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1825.0" y="510.0">ナ</text>
+<rect class="island" x="1838.7" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1848.4" y="510.0">ト</text>
+<rect class="island" x="1862.2" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1871.9" y="510.0">テ</text>
+<rect class="island" x="1885.6" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1895.3" y="510.0">ツ</text>
+<rect class="island" x="1909.0" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1918.7" y="510.0">チ</text>
+<rect class="island" x="1932.5" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1942.2" y="510.0">タ</text>
+<rect class="island" x="1955.9" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1965.6" y="510.0">ソ</text>
+<rect class="island" x="1979.3" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="1989.1" y="510.0">セ</text>
+<rect class="island" x="2002.8" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2012.5" y="510.0">ヒ</text>
+<rect class="island" x="2026.2" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2035.9" y="510.0">フ</text>
+<rect class="island" x="2049.6" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2059.4" y="510.0">ヘ</text>
+<rect class="island" x="2073.1" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2082.8" y="510.0">ホ</text>
+<rect class="island" x="2096.5" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2106.2" y="510.0">マ</text>
+<rect class="island" x="2119.9" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2129.7" y="510.0">ミ</text>
+<rect class="island" x="2143.4" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2153.1" y="510.0">ム</text>
+<rect class="island" x="2166.8" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2176.5" y="510.0">メ</text>
+<rect class="island" x="2190.3" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2200.0" y="510.0">モ</text>
+<rect class="island" x="2213.7" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2223.4" y="510.0">ヤ</text>
+<rect class="island" x="2237.1" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2246.8" y="510.0">ユ</text>
+<rect class="island" x="2260.6" y="310.0" width="19.4" height="400.0" rx="2" />
+<text class="island-label" x="2270.3" y="510.0">ヨ</text>
+<rect class="hall" fill="#fff3e0" x="1350" y="780" width="950" height="480" rx="8" />
+<text class="hall-label" x="1825.0" y="820">東7</text>
+<rect class="island" x="1370.0" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1387.9" y="1040.0">A</text>
+<rect class="island" x="1409.7" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1427.6" y="1040.0">B</text>
+<rect class="island" x="1449.5" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1467.3" y="1040.0">C</text>
+<rect class="island" x="1489.2" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1507.1" y="1040.0">D</text>
+<rect class="island" x="1529.0" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1546.8" y="1040.0">E</text>
+<rect class="island" x="1568.7" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1586.6" y="1040.0">F</text>
+<rect class="island" x="1608.4" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1626.3" y="1040.0">G</text>
+<rect class="island" x="1648.2" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1666.0" y="1040.0">H</text>
+<rect class="island" x="1687.9" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1705.8" y="1040.0">I</text>
+<rect class="island" x="1727.7" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1745.5" y="1040.0">J</text>
+<rect class="island" x="1767.4" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1785.3" y="1040.0">K</text>
+<rect class="island" x="1807.1" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1825.0" y="1040.0">L</text>
+<rect class="island" x="1846.9" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1864.7" y="1040.0">M</text>
+<rect class="island" x="1886.6" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1904.5" y="1040.0">N</text>
+<rect class="island" x="1926.3" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1944.2" y="1040.0">O</text>
+<rect class="island" x="1966.1" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="1984.0" y="1040.0">P</text>
+<rect class="island" x="2005.8" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2023.7" y="1040.0">Q</text>
+<rect class="island" x="2045.6" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2063.4" y="1040.0">R</text>
+<rect class="island" x="2085.3" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2103.2" y="1040.0">S</text>
+<rect class="island" x="2125.0" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2142.9" y="1040.0">T</text>
+<rect class="island" x="2164.8" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2182.7" y="1040.0">U</text>
+<rect class="island" x="2204.5" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2222.4" y="1040.0">V</text>
+<rect class="island" x="2244.3" y="840.0" width="35.7" height="400.0" rx="2" />
+<text class="island-label" x="2262.1" y="1040.0">W</text>
+<rect class="hall" fill="#e3f2fd" x="150" y="250" width="1000" height="1010" rx="8" />
+<text class="hall-label" x="650.0" y="290">西1-2</text>
+<rect class="island" x="170.0" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="182.2" y="775.0">つ</text>
+<rect class="island" x="198.4" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="210.5" y="775.0">て</text>
+<rect class="island" x="226.7" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="238.9" y="775.0">と</text>
+<rect class="island" x="255.1" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="267.2" y="775.0">な</text>
+<rect class="island" x="283.4" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="295.6" y="775.0">に</text>
+<rect class="island" x="311.8" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="323.9" y="775.0">ぬ</text>
+<rect class="island" x="340.1" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="352.3" y="775.0">ね</text>
+<rect class="island" x="368.5" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="380.6" y="775.0">の</text>
+<rect class="island" x="396.8" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="409.0" y="775.0">は</text>
+<rect class="island" x="425.2" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="437.4" y="775.0">ひ</text>
+<rect class="island" x="453.5" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="465.7" y="775.0">ふ</text>
+<rect class="island" x="481.9" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="494.1" y="775.0">へ</text>
+<rect class="island" x="510.2" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="522.4" y="775.0">ほ</text>
+<rect class="island" x="538.6" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="550.8" y="775.0">ま</text>
+<rect class="island" x="566.9" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="579.1" y="775.0">み</text>
+<rect class="island" x="595.3" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="607.5" y="775.0">む</text>
+<rect class="island" x="623.6" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="635.8" y="775.0">め</text>
+<rect class="island" x="652.0" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="664.2" y="775.0">あ</text>
+<rect class="island" x="680.4" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="692.5" y="775.0">い</text>
+<rect class="island" x="708.7" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="720.9" y="775.0">う</text>
+<rect class="island" x="737.1" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="749.2" y="775.0">え</text>
+<rect class="island" x="765.4" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="777.6" y="775.0">お</text>
+<rect class="island" x="793.8" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="805.9" y="775.0">か</text>
+<rect class="island" x="822.1" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="834.3" y="775.0">き</text>
+<rect class="island" x="850.5" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="862.6" y="775.0">く</text>
+<rect class="island" x="878.8" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="891.0" y="775.0">け</text>
+<rect class="island" x="907.2" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="919.4" y="775.0">こ</text>
+<rect class="island" x="935.5" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="947.7" y="775.0">さ</text>
+<rect class="island" x="963.9" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="976.1" y="775.0">し</text>
+<rect class="island" x="992.2" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="1004.4" y="775.0">す</text>
+<rect class="island" x="1020.6" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="1032.8" y="775.0">せ</text>
+<rect class="island" x="1048.9" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="1061.1" y="775.0">そ</text>
+<rect class="island" x="1077.3" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="1089.5" y="775.0">た</text>
+<rect class="island" x="1105.6" y="310.0" width="24.4" height="930.0" rx="2" />
+<text class="island-label" x="1117.8" y="775.0">ち</text>
+<rect class="hall" fill="#fff8e1" x="300" y="1330" width="1300" height="190" rx="8" />
+<text class="hall-label" x="950.0" y="1370">南1-2</text>
+<rect class="island" x="320.0" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="348.1" y="1445.0">a</text>
+<rect class="island" x="380.2" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="408.3" y="1445.0">t</text>
+<rect class="island" x="440.4" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="468.5" y="1445.0">s</text>
+<rect class="island" x="500.6" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="528.7" y="1445.0">r</text>
+<rect class="island" x="560.8" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="588.9" y="1445.0">q</text>
+<rect class="island" x="621.0" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="649.0" y="1445.0">p</text>
+<rect class="island" x="681.1" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="709.2" y="1445.0">o</text>
+<rect class="island" x="741.3" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="769.4" y="1445.0">n</text>
+<rect class="island" x="801.5" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="829.6" y="1445.0">m</text>
+<rect class="island" x="861.7" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="889.8" y="1445.0">l</text>
+<rect class="island" x="921.9" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="950.0" y="1445.0">k</text>
+<rect class="island" x="982.1" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1010.2" y="1445.0">a</text>
+<rect class="island" x="1042.3" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1070.4" y="1445.0">b</text>
+<rect class="island" x="1102.5" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1130.6" y="1445.0">c</text>
+<rect class="island" x="1162.7" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1190.8" y="1445.0">d</text>
+<rect class="island" x="1222.9" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1251.0" y="1445.0">e</text>
+<rect class="island" x="1283.0" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1311.1" y="1445.0">f</text>
+<rect class="island" x="1343.2" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1371.3" y="1445.0">g</text>
+<rect class="island" x="1403.4" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1431.5" y="1445.0">h</text>
+<rect class="island" x="1463.6" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1491.7" y="1445.0">i</text>
+<rect class="island" x="1523.8" y="1390.0" width="56.2" height="110.0" rx="2" />
+<text class="island-label" x="1551.9" y="1445.0">j</text>
+<text class="note" x="30" y="1560">東4-6ホールは改修工事のため使用不可。東1-3・東7・西1-2・南1-2にサークル配置。東8はコスプレ等、西3-4・南3-4は企業ブース。</text>
+</svg>

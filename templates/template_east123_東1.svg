@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1400" viewBox="0 0 2200 1400">
+<defs>
+<style>
+  .bg { fill: #ffffff; }
+  .title { font-family: sans-serif; font-size: 40px; font-weight: bold; fill: #475569; }
+  .hall { fill: none; stroke: #334155; stroke-width: 3; }
+  .hall-label { font-family: sans-serif; font-size: 30px; font-weight: bold; fill: #475569; text-anchor: middle; }
+  .island-guide { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 6,4; }
+  .island-label { font-family: sans-serif; font-size: 24px; font-weight: bold; fill: #475569; text-anchor: middle; dominant-baseline: central; }
+  .number-hint { font-family: sans-serif; font-size: 12px; fill: #94a3b8; text-anchor: middle; dominant-baseline: central; }
+  .note { font-family: sans-serif; font-size: 18px; fill: #94a3b8; }
+</style>
+</defs>
+<rect class="bg" x="0" y="0" width="2200" height="1400" />
+<text class="title" x="30" y="55">東1 ホール 下地テンプレート</text>
+<text class="note" x="30" y="90">点線の長方形が島の位置ガイドです。Inkscapeでこの上に島の外形を描いてください。</text>
+<rect class="island-guide" x="40.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="116.0" y="148.0">ス</text>
+<text class="number-hint" x="116.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="204.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="280.0" y="148.0">シ</text>
+<text class="number-hint" x="280.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="368.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="444.0" y="148.0">サ</text>
+<text class="number-hint" x="444.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="532.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="608.0" y="148.0">コ</text>
+<text class="number-hint" x="608.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="696.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="772.0" y="148.0">ケ</text>
+<text class="number-hint" x="772.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="860.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="936.0" y="148.0">ク</text>
+<text class="number-hint" x="936.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1024.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1100.0" y="148.0">キ</text>
+<text class="number-hint" x="1100.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1188.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1264.0" y="148.0">カ</text>
+<text class="number-hint" x="1264.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1352.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1428.0" y="148.0">オ</text>
+<text class="number-hint" x="1428.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1516.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1592.0" y="148.0">エ</text>
+<text class="number-hint" x="1592.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1680.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1756.0" y="148.0">ウ</text>
+<text class="number-hint" x="1756.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="1844.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="1920.0" y="148.0">イ</text>
+<text class="number-hint" x="1920.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+<rect class="island-guide" x="2008.0" y="120.0" width="152.0" height="1220.0" rx="4" />
+<text class="island-label" x="2084.0" y="148.0">ア</text>
+<text class="number-hint" x="2084.0" y="175.0">01a, 01b, 02a, 02b, 03a, 03b, 04a, 04b...</text>
+</svg>

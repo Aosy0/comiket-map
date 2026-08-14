@@ -20,6 +20,11 @@ const App = {
 	init() {
 		console.log('サークルマップ - 初期化開始');
 
+		// スクロール位置の自動復元を無効化（リストタブは内部スクロールのため、復元でカードが隠れるのを防ぐ）
+		if ('scrollRestoration' in history) {
+			history.scrollRestoration = 'manual';
+		}
+
 		// 旧データ（C108固定キー）をC107へ移行（初回起動時のみ・circle読み込みより前）
 		const migrated = Storage.migrateLegacyData();
 		if (migrated) {
@@ -99,9 +104,16 @@ const App = {
 
 	/**
 	 * Service Worker登録
+	 * 開発環境（localhost / 127.0.0.1）ではキャッシュ問題を避けるため登録しない。
 	 */
 	registerServiceWorker() {
 		if ('serviceWorker' in navigator) {
+			const isDev =
+				location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+			if (isDev) {
+				console.log('[SW] 開発環境のためService Workerをスキップ');
+				return;
+			}
 			navigator.serviceWorker
 				.register('/sw.js')
 				.then((reg) => {
@@ -474,6 +486,11 @@ const App = {
 			content.classList.toggle('active', content.id === `tab-${tabId}`);
 		});
 
+		// リストタブは body スクロールが無効なため、前のタブのスクロール位置を引き継がない
+		if (tabId === 'list') {
+			window.scrollTo(0, 0);
+		}
+
 		// マップタブに切り替えた場合、表示後にフィット調整
 		if (tabId === 'map') {
 			// DOMの更新を待ってからフィット処理を実行
@@ -684,33 +701,31 @@ const App = {
 	createCircleCard(circle) {
 		const dayLabel = circle.day === '1' ? '1日目' : '2日目';
 		const priorityClass = `priority-${circle.priority}`;
+		const spacePriorityClass = `space-priority-${circle.priority}`;
 		const checkedClass = circle.checked ? 'checked' : '';
-		const checkBtnClass = circle.checked ? 'check-btn checked' : 'check-btn';
+		const checkBtnClass = circle.checked
+			? `check-btn ${priorityClass} checked`
+			: `check-btn ${priorityClass}`;
 		const checkIcon = circle.checked
 			? '<svg class="icon icon-sm"><use href="#icon-check"/></svg>'
 			: '<svg class="icon icon-sm"><use href="#icon-pending"/></svg>';
 		const checkBtnText = circle.checked ? '済' : '未';
 
 		return `
-            <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
-								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
-									<span class="visually-hidden">New alerts</span>
-								</span>
+            <div class="circle-card ${checkedClass}" data-id="${circle.id}">
                 <div class="circle-header">
 									<button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">
 										<svg class="icon" style="width: 16px; height: 16px;"><use href="#icon-move" /></svg>
 									</button>
-									<span class="circle-name">${this.escapeHtml(circle.name)}</span>
-									<span class="circle-space">${this.escapeHtml(circle.space)}</span>
+									<span class="circle-space ${spacePriorityClass}">${this.escapeHtml(circle.space)}</span>
+									<button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
                 </div>
+                <div class="circle-name">${this.escapeHtml(circle.name)}</div>
                 <div class="circle-info">
                     <span><svg class="icon icon-sm"><use href="#icon-event"/></svg> ${dayLabel}</span>
                     ${circle.genre ? `<span><svg class="icon icon-sm"><use href="#icon-folder"/></svg> ${this.escapeHtml(circle.genre)}</span>` : ''}
                 </div>
                 ${circle.memo ? `<div class="circle-memo">${this.escapeHtml(circle.memo)}</div>` : ''}
-                <div class="circle-actions">
-                    <button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
-                </div>
             </div>
         `;
 	},
@@ -720,24 +735,22 @@ const App = {
 	 */
 	createCompactCircleCard(circle) {
 		const priorityClass = `priority-${circle.priority}`;
+		const spacePriorityClass = `space-priority-${circle.priority}`;
 		const checkedClass = circle.checked ? 'checked' : '';
-		const checkBtnClass = circle.checked ? 'check-btn checked' : 'check-btn';
+		const checkBtnClass = circle.checked
+			? `check-btn ${priorityClass} checked`
+			: `check-btn ${priorityClass}`;
 		const checkIcon = circle.checked
 			? '<svg class="icon icon-sm"><use href="#icon-check"/></svg>'
 			: '<svg class="icon icon-sm"><use href="#icon-pending"/></svg>';
 		const checkBtnText = circle.checked ? '済' : '未';
 
 		return `
-            <div class="circle-card ${priorityClass} ${checkedClass}" data-id="${circle.id}">
-								<span class="circle-card-badge ${priorityClass} position-absolute top-0 start-0 translate-middle p-2 border border-light rounded-pill">
-									<span class="visually-hidden">New alerts</span>
-								</span>
-                <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
+            <div class="circle-card ${checkedClass}" data-id="${circle.id}">
                 <div class="circle-header">
+                    <button type="button" class="drag-handle" aria-label="ドラッグして並び替え" title="ドラッグして並び替え">≡</button>
+                    <span class="circle-space ${spacePriorityClass}">${this.escapeHtml(circle.space)}</span>
                     <span class="circle-name">${this.escapeHtml(circle.name)}</span>
-                    <span class="circle-space">${this.escapeHtml(circle.space)}</span>
-                </div>
-                <div class="circle-actions">
                     <button class="${checkBtnClass}" data-id="${circle.id}">${checkIcon} ${checkBtnText}</button>
                 </div>
             </div>
@@ -922,6 +935,12 @@ const App = {
 		this.showToast('サークルを追加しました', 0);
 		this.switchTab('list');
 		this.renderCircleList();
+
+		// 追加したカードはリスト末尾にあるため、スクロール位置を引き継がず画面中央に表示する
+		const addedCard = document.querySelector(`.circle-card[data-id="${circle.id}"]`);
+		if (addedCard) {
+			addedCard.scrollIntoView({ block: 'center' });
+		}
 	},
 
 	/**
@@ -1338,10 +1357,10 @@ const App = {
 		if (!container) return;
 
 		const areas = [
-			{ key: 'e456', name: '東4-6ホール' },
-			{ key: 'e78', name: '東7-8ホール' },
-			{ key: 'w', name: '西1-4ホール' },
-			{ key: 's', name: '南1-4ホール' },
+			{ key: 'east123', name: '東1-3ホール' },
+			{ key: 'east7', name: '東7ホール' },
+			{ key: 'west12', name: '西1-2ホール' },
+			{ key: 'south12', name: '南1-2ホール' },
 		];
 
 		container.innerHTML = '';

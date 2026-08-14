@@ -1,0 +1,89 @@
+{
+  "event": "C108",
+  "day": 1,
+  "title": "C108 1日目 サークルマップ (東京ビッグサイト)",
+  "date": "2026-08-15",
+  "note": "東4-6ホールは改修工事のため使用不可。東1-3・東7・西1-2・南1-2にサークル配置。東8はコスプレ等、西3-4・南3-4は企業ブース。",
+  "areas": [
+    {
+      "id": "east123",
+      "label": "東1-3ホール",
+      "halls": [
+        {
+          "name": "東1",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit_suffix", "start": 1, "perIsland": 24 },
+          "islands": ["ス", "シ", "サ", "コ", "ケ", "ク", "キ", "カ", "オ", "エ", "ウ", "イ", "ア"]
+        },
+        {
+          "name": "東2",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit_suffix", "start": 1, "perIsland": 24 },
+          "islands": ["ヒ", "ハ", "ノ", "ネ", "ヌ", "ニ", "ナ", "ト", "テ", "ツ", "チ", "タ", "ソ", "セ"]
+        },
+        {
+          "name": "東3",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit_suffix", "start": 1, "perIsland": 24 },
+          "islands": ["ヒ", "フ", "ヘ", "ホ", "マ", "ミ", "ム", "メ", "モ", "ヤ", "ユ", "ヨ"]
+        }
+      ]
+    },
+    {
+      "id": "east7",
+      "label": "東7ホール",
+      "halls": [
+        {
+          "name": "東7",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit", "start": 1, "perIsland": 24 },
+          "islands": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"]
+        }
+      ]
+    },
+    {
+      "id": "west12",
+      "label": "西1-2ホール",
+      "halls": [
+        {
+          "name": "西1",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit", "start": 1, "perIsland": 16 },
+          "islands": ["つ", "て", "と", "な", "に", "ぬ", "ね", "の", "は", "ひ", "ふ", "へ", "ほ", "ま", "み", "む", "め"]
+        },
+        {
+          "name": "西2",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit", "start": 1, "perIsland": 16 },
+          "islands": ["あ", "い", "う", "え", "お", "か", "き", "く", "け", "こ", "さ", "し", "す", "せ", "そ", "た", "ち"]
+        }
+      ]
+    },
+    {
+      "id": "south12",
+      "label": "南1-2ホール",
+      "halls": [
+        {
+          "name": "南1",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit", "start": 1, "perIsland": 18 },
+          "islands": ["a", "t", "s", "r", "q", "p", "o", "n", "m", "l", "k"]
+        },
+        {
+          "name": "南2",
+          "layout": "row",
+          "rows": 2,
+          "number": { "format": "digit", "start": 1, "perIsland": 18 },
+          "islands": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
+        }
+      ]
+    }
+  ]
+}

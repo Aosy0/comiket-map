@@ -5,7 +5,7 @@
  * - /api/gemini → Gemini API へのプロキシ（APIキーはサーバー側のみで保持）
  *
  * 使い方: npm run dev
- * → http://localhost:3000
+ * → http://localhost:5173
  *
  * ※ WebSocketチャットサーバー（ws-server.mjs）は別プロセスで起動すること:
  *   node ws-server.mjs（ws://localhost:3001）
@@ -45,8 +45,13 @@ export default defineConfig(({ mode }) => {
 			},
 		],
 		server: {
-			port: 3000,
+			host: '0.0.0.0',
+			port: 5173,
 			strictPort: true,
+			// 開発時はキャッシュを無効化して、マップやJSの変更を即時反映する
+			headers: {
+				'Cache-Control': 'no-store',
+			},
 			proxy: {
 				'/api/gemini': {
 					target: 'https://generativelanguage.googleapis.com',
@@ -56,6 +61,9 @@ export default defineConfig(({ mode }) => {
 					headers: geminiApiKey ? { 'x-goog-api-key': geminiApiKey } : undefined,
 				},
 			},
+		},
+		build: {
+			outDir: 'dist',
 		},
 	};
 });

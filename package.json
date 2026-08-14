@@ -1,6 +1,6 @@
 {
 	"scripts": {
-		"dev": "vite",
+		"dev": "vite --host 0.0.0.0 --port 5173",
 		"check": "biome check .",
 		"check:fix": "biome check --write ."
 	},
