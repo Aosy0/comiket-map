@@ -115,8 +115,7 @@ npm run check:fix
 1. テンプレートを Inkscape で開く
 2. 点線ガイドの上に島の外形（長方形など）を描く
 3. 島の中にサークル番号を記載（例: 01a, 01b, 02a...）
-4. 完成した SVG を `app/maps/` に保存:
-   - `map_east123.svg` / `map_east7.svg` / `map_west12.svg` / `map_south12.svg` / `map_overview.svg`
+4. 完成した SVG を最適化スクリプトで軽量化して `app/maps/` に保存（下記「最適化スクリプト」参照）
 5. アプリのマップタブで確認
 
 ### 制作時の注意点
@@ -125,6 +124,33 @@ npm run check:fix
 - **軽量性**: 画像・外部フォントは使わず、フラットな配色（省電力・低通信量）
 - 島の中にサークル番号を記載する（公式マップと同じ構造）
 - 詳細な島構成データは `docs/C108_マップ制作資料.md` を参照
+
+### 最適化スクリプト
+
+Inkscape で保存した SVG はサイズが大きく、非表示レイヤー・カラープロファイルなどの不要な要素を含むため、
+`app/maps/` に配置する前に最適化スクリプトを通します。
+
+| スクリプト | 内容 |
+|-----------|------|
+| `optimize_svg.py` | SVGマップの最適化（非表示レイヤー・defs・カラープロファイル削除、style集約、不要id削除、1行化） |
+| `inject_circle_numbers_v5.py` | 東7マップのサークル番号・島ラベル注入（`E7.svg` → `E7_numbered_v5.svg`） |
+| `inject_east123_numbers.py` | 東1-3マップのサークル番号・島ラベル注入（`E123.svg` → `E123_numbered.svg`） |
+
+#### 東7ホール（番号・ラベル注入あり）
+
+```bash
+python inject_circle_numbers_v5.py
+python optimize_svg.py docs/inkscape/E7_numbered_v5.svg app/maps/map_east7.svg
+```
+
+#### 東1-3ホール（番号・ラベル注入あり）
+
+```bash
+python inject_east123_numbers.py
+python optimize_svg.py docs/inkscape/E123_numbered.svg app/maps/map_east123.svg
+```
+
+※ 番号形式は数字のみ（枝番 a/b は省略）。各島は左右2列の蛇行配置で、島ごとに1から連番を振ります。
 
 ---
 
