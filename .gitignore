@@ -9,11 +9,6 @@ maps/
 # 生成済みのアプリ用マップ（SVG）はコミット対象
 !app/maps/
 
-
-*.md
-!README.md
-!docs/C108_マップ制作資料.md
-
 # playwright
 .playwright
 .claude
