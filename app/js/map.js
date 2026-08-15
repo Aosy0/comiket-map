@@ -8,6 +8,11 @@ const MapViewer = {
 	scale: 1,
 	minScale: 0.5,
 	maxScale: 10,
+	// マップ別の最大拡大倍率（全体表示に対する倍率。未指定は8倍）
+	mapMaxZoomFactors: {
+		east123: 12,
+		west12: 12,
+	},
 	translateX: 0,
 	translateY: 0,
 	isDragging: false,
@@ -17,9 +22,11 @@ const MapViewer = {
 	lastPinchCenterX: 0,
 	lastPinchCenterY: 0,
 
-	// 東7サークル色付け（SVG内のrectを直接塗りつぶす）
+	// サークル色付け（SVG内のrectを直接塗りつぶす）
 	circleColors: {}, // { '東7-A-1': '#fde047' } の色マップ
 	circleStorageKey: Storage.KEYS.CIRCLE_COLORS,
+	// サークルタップ色付けが有効な自作SVGマップ
+	circleEnabledMaps: ['east123', 'east7', 'west12'],
 	circlePalette: ['#fde047', '#86efac', '#93c5fd', '#fca5a5'], // 黄→緑→青→赤→解除
 	dragStartX: 0,
 	dragStartY: 0,
@@ -703,9 +710,9 @@ const MapViewer = {
 		if (defaultSrc) {
 			await this.setImage(defaultSrc);
 
-			// 東7のみサークルタップ色付けを有効化
-			if (mapKey === 'east7') {
-				await this.setupEast7Overlay();
+			// 自作SVGマップのみサークルタップ色付けを有効化（東1-3・東7・西1-2）
+			if (this.circleEnabledMaps.includes(mapKey)) {
+				await this.setupCircleOverlay();
 			}
 
 			// 初回表示時の案内
@@ -800,10 +807,10 @@ const MapViewer = {
 	},
 
 	/**
-	 * 東7のサークルrectを直接操作（オーバーレイを使わずSVG内を直接塗りつぶす）
+	 * サークルrectを直接操作（オーバーレイを使わずSVG内を直接塗りつぶす）
 	 */
-	async setupEast7Overlay() {
-		if (this.currentMapKey !== 'east7') return;
+	async setupCircleOverlay() {
+		if (!this.circleEnabledMaps.includes(this.currentMapKey)) return;
 		// インラインSVG読み込み済みの場合のみ直接バインド
 		if (this.image && this.image.tagName === 'svg') {
 			this.bindCircleRects();
@@ -1080,9 +1087,9 @@ const MapViewer = {
 
 		// 全体表示はコンテナにぴったりではなく、わずかに余白を持たせる（見切れ防止）
 		const viewScale = fitScale * 0.97;
-		// 縮小は全体表示から少し余白が見えるところまで、拡大は全体表示の8倍まで
+		// 縮小は全体表示から少し余白が見えるところまで、拡大は全体表示の8倍まで（マップ別に上書き可）
 		this.minScale = fitScale * 0.94;
-		this.maxScale = fitScale * 8;
+		this.maxScale = fitScale * (this.mapMaxZoomFactors[this.currentMapKey] ?? 8);
 		this.scale = viewScale;
 
 		// 画像を中央に配置（CSSのleft:50%, top:50%に対応してオフセット）
