@@ -48,12 +48,14 @@ const MapViewer = {
 		south12: '/maps/map_south12.svg',
 		overview: '/maps/map_overview.svg',
 	},
-	// 開発環境ではキャッシュを無効化して最新のマップを読み込む
+	// キャッシュバージョン（sw.jsのCACHE_NAMEと同期。リリース時に変更する）
+	mapVersion: '73',
+	// CDN/SWキャッシュをバイパスして最新マップを読み込む（開発時は常に最新、本番はバージョン付き）
 	mapUrl(mapKey) {
 		const base = this.maps[mapKey];
 		if (!base) return base;
 		const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-		return isDev ? `${base}?v=${Date.now()}` : base;
+		return isDev ? `${base}?v=${Date.now()}` : `${base}?v=${this.mapVersion}`;
 	},
 
 	// 現在表示中のマップキー

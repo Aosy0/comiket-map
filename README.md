@@ -231,7 +231,7 @@ python optimize_svg.py docs/inkscape/E123_numbered.svg app/maps/map_east123.svg
 
 1. `app/index.html` - アプリ情報のバージョン表示
 2. `README.md` - バージョン履歴に追記
-3. `app/sw.js`, `app/index.html` - キャッシュバージョン（`?v=XX`）
+3. `app/sw.js`, `app/index.html`, `app/js/map.js` - キャッシュバージョン（`?v=XX`）
 4. GitHub - ここまで更新したら **必ずpush**（端末のキャッシュ更新と手順の混乱防止）
 
 ### コミットメッセージのルール
@@ -243,6 +243,23 @@ python optimize_svg.py docs/inkscape/E123_numbered.svg app/maps/map_east123.svg
 ---
 
 ## バージョン履歴
+
+### v0.8.10 (2026-08-15)
+
+**CDNキャッシュ問題の恒久対策（キャッシュバージョン付与を復活）**
+
+- index.html の CSS/JS 参照にキャッシュバージョン `?v=XX` を付与（sw.js のキャッシュリストも同期）
+- マップSVGも `mapUrl()` で本番環境に `?v=XX` を付与
+- これまで CDN（Cloudflare）に古いバージョンがキャッシュされ、更新が反映されない問題があった
+- リリース時に `?v=XX` を更新することで、端末・CDNの古いキャッシュを確実にバイパスできる
+- 併せて、sw.js のキャッシュリストに `toast-info.js`（従来漏れていた）を追加
+
+#### キャッシュバージョン
+
+- Service Worker: `C108map-v73`
+- CSS/JS/SVG: `?v=73`
+
+---
 
 ### v0.8.9 (2026-08-15)
 
