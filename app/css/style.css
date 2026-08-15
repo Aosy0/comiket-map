@@ -49,9 +49,9 @@
 	--danger: #d93025;
 	--safe-bottom: env(safe-area-inset-bottom, 0px);
 	/* stickyヘッダー分のスクロールオフセット（端末差を吸収するため少し余裕を持たせる） */
-	--header-offset: 80px;
+	--header-offset: 48px;
 	/* ヘッダー高さ（マップタブの表示高さ計算に使用。768px以上では横並びになり約半分になる） */
-	--header-height: 100px;
+	--header-height: 48px;
 }
 
 /* アンカー移動/自動スクロール時にヘッダー裏へ潜り込むのを防ぐ */
@@ -102,28 +102,33 @@ button {
 	min-height: 100dvh;
 }
 
-/* ヘッダー - コンパクト */
+/* ヘッダー - コンパクト（スマホも横並びで左右余白を活用） */
 header {
 	background: var(--primary);
 	color: #fff;
-	padding: 12px 16px;
+	padding: 8px 12px;
 	position: sticky;
 	top: 0;
 	z-index: 100;
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
 
 header h1 {
 	font-size: 1rem;
 	font-weight: 600;
-	text-align: center;
+	flex: 0 0 auto;
+	text-align: left;
+	white-space: nowrap;
 }
 
 /* ヘッダーの開催回セレクター */
 .event-select {
-	display: block;
-	margin: 6px auto 0;
+	flex: 0 0 auto;
+	margin: 0;
 	padding: 4px 8px;
-	font-size: 0.85rem;
+	font-size: 0.8rem;
 	color: #fff;
 	border: 1px solid rgba(255, 255, 255, 0.4);
 	border-radius: 6px;
@@ -188,9 +193,10 @@ header h1 {
 }
 
 .header-status {
-	font-size: 0.75rem;
-	text-align: center;
-	margin-top: 2px;
+	flex: 0 0 auto;
+	font-size: 0.7rem;
+	text-align: right;
+	margin: 0 0 0 auto;
 	opacity: 0.9;
 }
 
@@ -1416,7 +1422,6 @@ input:checked + .toggle-slider:before {
 	header {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		gap: 16px;
 		padding: 6px 24px;
 	}

@@ -303,8 +303,11 @@ def inject_numbers(svg_path, out_path):
 
         snake_cells = snake_order(island["blocks"], parent_map)
         for n_idx, cell in enumerate(snake_cells):
+            num_text = str(n_idx + 1)
+            cell["elem"].set("data-circle", f"西1-2-{island_name}-{num_text}")
+            cell["elem"].set("data-island", island_name)
             parent = parent_map.get(cell["elem"])
-            add_number_text(parent, cell["elem"], str(n_idx + 1))
+            add_number_text(parent, cell["elem"], num_text)
             text_count += 1
         print(f"  島{idx}: {island_name}, {len(snake_cells)}セル")
 
@@ -359,6 +362,8 @@ def inject_numbers(svg_path, out_path):
             numbers = list(range(1, 62)) + list(range(66, 74))
         assignments = assign_wall_island(wall["blocks"], parent_map, is_me, numbers)
         for rect_elem, num_text in assignments:
+            rect_elem.set("data-circle", f"西1-2-{island_label}-{num_text}")
+            rect_elem.set("data-island", island_label)
             add_number_text_unrotated(layer1, rect_elem, num_text, parent_map, l1_tx, l1_ty)
             text_count += 1
         print(f"  {island_label}島: {len(assignments)}セル")
