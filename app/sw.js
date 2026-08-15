@@ -2,27 +2,28 @@
  * Service Worker - オフラインキャッシュ
  */
 
-const CACHE_NAME = 'circlemap-v72';
+const CACHE_NAME = 'circlemap-v73';
 const ASSETS_TO_CACHE = [
 	'/',
 	'/index.html',
-	'/css/style.css',
-	'/js/app.js',
-	'/js/storage.js',
-	'/js/map.js',
-	'/js/sync.js',
-	'/js/jsQR.js',
-	'/js/friends.js',
-	'/js/pdf-handler.js',
+	'/css/style.css?v=73',
+	'/js/app.js?v=73',
+	'/js/storage.js?v=73',
+	'/js/map.js?v=73',
+	'/js/sync.js?v=73',
+	'/js/jsQR.js?v=73',
+	'/js/friends.js?v=73',
+	'/js/pdf-handler.js?v=73',
+	'/js/toast-info.js?v=73',
 	'/system_instruction.txt',
 	'/manifest.json',
 	'/icons/icon-192.png',
 	'/icons/icon-512.png',
-	'/maps/map_overview.svg',
-	'/maps/map_east123.svg',
-	'/maps/map_east7.svg',
-	'/maps/map_west12.svg',
-	'/maps/map_south12.svg',
+	'/maps/map_overview.svg?v=73',
+	'/maps/map_east123.svg?v=73',
+	'/maps/map_east7.svg?v=73',
+	'/maps/map_west12.svg?v=73',
+	'/maps/map_south12.svg?v=73',
 ];
 
 // インストール時にアセットをキャッシュ
